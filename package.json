@@ -1,0 +1,35 @@
+{
+  "name": "variant-review-portal",
+  "version": "0.1.0",
+  "description": "Turn the images jb2export batch renders from a structural variant callset into a static review portal: one card per record, a verdict, and a link back into JBrowse",
+  "keywords": [
+    "genomics",
+    "structural-variants",
+    "vcf",
+    "jbrowse"
+  ],
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "variant-review-portal": "./bin/make-portal.mjs"
+  },
+  "files": [
+    "bin",
+    "lib"
+  ],
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@gmod/vcf": "^7.2.0",
+    "esbuild": "^0.28.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.11.0"
+  }
+}

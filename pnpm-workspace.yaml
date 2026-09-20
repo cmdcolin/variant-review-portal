@@ -1,0 +1,4 @@
+allowBuilds:
+  esbuild: true
+  # docs/shoot.mjs takes a Chrome from PUPPETEER_EXECUTABLE_PATH
+  puppeteer: false
