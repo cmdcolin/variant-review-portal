@@ -19,6 +19,8 @@ const VERDICT_FILTERS = [
   ...VERDICTS.map(b => [b.v, b.label]),
 ]
 
+const total = links => links.reduce((a, b) => a + b, 0)
+
 function facts(card) {
   if (card.kind === 'event') {
     return [
@@ -80,7 +82,15 @@ const Card = React.memo(function Card({
       </div>
       {card.images.map(img => (
         <figure className="shot-set" key={img.label} data-set={img.label}>
-          <figcaption>{img.label}</figcaption>
+          <figcaption>
+            {img.label}
+            {img.links ? (
+              <span className="links-count" data-zero={!total(img.links)}>
+                {img.links.join(' + ')} split read
+                {total(img.links) === 1 ? '' : 's'} join the panels
+              </span>
+            ) : null}
+          </figcaption>
           {img.src ? (
             <img
               className="shot"
@@ -134,6 +144,7 @@ export function App({ data }) {
   const [keysOpen, setKeysOpen] = useState(false)
   const [cls, setCls] = useState('all')
   const [event, setEvent] = useState('all')
+  const [support, setSupport] = useState('all')
   const [verdictFilter, setVerdictFilter] = useState('all')
   const [q, setQ] = useState('')
   const [cursor, setCursor] = useState(/** @type {string | null} */ (null))
@@ -185,8 +196,8 @@ export function App({ data }) {
   }, [])
 
   const filter = useMemo(
-    () => ({ cls, event, verdictFilter, q }),
-    [cls, event, verdictFilter, q],
+    () => ({ cls, event, support, verdictFilter, q }),
+    [cls, event, support, verdictFilter, q],
   )
   const visible = useMemo(
     () => data.cards.filter(c => matches(c, { ...filter, verdicts })),
@@ -413,6 +424,15 @@ export function App({ data }) {
     [data.cards],
   )
 
+  // in the order a reviewer takes the queue: unsupported first
+  const supports = useMemo(
+    () =>
+      Object.keys(data.support)
+        .map(k => [k, data.cards.filter(c => c.support === k).length])
+        .filter(([, n]) => n),
+    [data.cards, data.support],
+  )
+
   const pct = x => `${data.cards.length ? (x / data.cards.length) * 100 : 0}%`
 
   return (
@@ -520,6 +540,23 @@ export function App({ data }) {
               {events.map(ev => (
                 <option key={ev} value={ev}>
                   {ev}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          {supports.length > 1 ? (
+            <select
+              id="sf"
+              aria-label="Filter by read support"
+              value={support}
+              onChange={e => {
+                setSupport(e.target.value)
+              }}
+            >
+              <option value="all">Any support</option>
+              {supports.map(([k, n]) => (
+                <option key={k} value={k}>
+                  {data.support[k]} ({n})
                 </option>
               ))}
             </select>

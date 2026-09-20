@@ -6,6 +6,7 @@ import {
   buildCards,
   liveLink,
   parseManifest,
+  supportOf,
   svClass,
 } from '../lib/cards.mjs'
 
@@ -22,16 +23,21 @@ const VCF = [
   'chr1\t5000\tins1\tN\t<INS>\t.\tPASS\tSVTYPE=INS;SVLEN=312',
 ].join('\n')
 
-const head = 'file\tlocs\tname\tline\tevent\tstatus'
+const head = 'file\tlocs\tname\tline\tevent\tlinks\tstatus'
 const TUMOR = [
   head,
-  '1_a.png\tchr3:24400-25600 chr10:57400-58600\ta\t8\tder3\tok',
-  '2_del.png\tchr1:8400-9772\t\t9\t\tok',
-  '3_ins.png\tchr1:4400-5600\tins1\t10\t\tfailed',
-  'event_1_der3.png\tchr3:24400-26000 chr10:57400-58800 chr12:71400-72800\tder3\t\tder3\tok',
+  '1_a.png\tchr3:24400-25600 chr10:57400-58600\ta\t8\tder3\t29\tok',
+  '2_del.png\tchr1:8400-9772\t\t9\t\t\tok',
+  '3_ins.png\tchr1:4400-5600\tins1\t10\t\t\tfailed',
+  'event_1_der3.png\tchr3:24400-26000 chr10:57400-58800 chr12:71400-72800\tder3\t\tder3\t33\tok',
 ].join('\n')
-// a control rendered with --limit 2: the insertion and the event are absent
-const NORMAL = [head, ...TUMOR.split('\n').slice(1, 3)].join('\n')
+// a control rendered with --limit 2: the insertion and the event are absent,
+// and no read of it joins the junction's panels
+const NORMAL = [
+  head,
+  '1_a.png\tchr3:24400-25600 chr10:57400-58600\ta\t8\tder3\t0\tok',
+  '2_del.png\tchr1:8400-9772\t\t9\t\t\tok',
+].join('\n')
 
 function cards(link) {
   return buildCards({
@@ -68,14 +74,63 @@ test('a card carries the facts of the VCF line its manifest row names', () => {
 test('every image set joins on the line, and says why one is missing', () => {
   const [bnd, , ins, event] = cards()
   assert.deepEqual(bnd.images, [
-    { label: 'tumor', src: 'img/tumor/1_a.png', status: 'ok' },
-    { label: 'normal', src: 'img/normal/1_a.png', status: 'ok' },
+    { label: 'tumor', src: 'img/tumor/1_a.png', status: 'ok', links: [29] },
+    { label: 'normal', src: 'img/normal/1_a.png', status: 'ok', links: [0] },
   ])
   assert.deepEqual(ins.images, [
-    { label: 'tumor', src: undefined, status: 'failed' },
-    { label: 'normal', src: undefined, status: 'absent' },
+    { label: 'tumor', src: undefined, status: 'failed', links: undefined },
+    { label: 'normal', src: undefined, status: 'absent', links: undefined },
   ])
   assert.equal(event.images[1].status, 'absent')
+})
+
+test('the counts under a card’s images say how far the reads support it', () => {
+  const img = links => ({ links })
+  assert.deepEqual(
+    [
+      supportOf([img([0]), img([0])]),
+      supportOf([img([12]), img([3])]),
+      supportOf([img([12]), img([0])]),
+      // two tracks in one image: any read in any of them is support
+      supportOf([img([0, 4])]),
+      // one panel, or a control that was never counted
+      supportOf([img(undefined), img([5])]),
+      supportOf([img([12]), img(undefined)]),
+    ],
+    ['none', 'control', 'sample', 'sample', 'uncounted', 'sample'],
+  )
+  const [bnd, del] = cards()
+  assert.deepEqual([bnd.support, del.support], ['sample', 'uncounted'])
+})
+
+test('a manifest with no links column still builds cards, uncounted', () => {
+  const old = 'file\tlocs\tname\tline\tevent\tstatus'
+  const [card] = buildCards({
+    vcfText: VCF,
+    sets: [
+      {
+        label: 't',
+        rows: parseManifest(`${old}\n1_a.png\tchr3:1-2 chr10:3-4\ta\t8\tder3\tok`),
+      },
+    ],
+  })
+  assert.equal(card.support, 'uncounted')
+})
+
+test('the support filter leaves the cards of one kind', () => {
+  const all = cards()
+  const filter = {
+    cls: 'all',
+    event: 'all',
+    support: 'sample',
+    verdictFilter: 'all',
+    q: '',
+    verdicts: {},
+  }
+  assert.deepEqual(
+    all.filter(c => matches(c, filter)).map(c => c.id),
+    ['8', 'event:der3'],
+  )
 })
 
 test('an event row is a card of its own, counting its records', () => {

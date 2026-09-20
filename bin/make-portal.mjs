@@ -7,7 +7,13 @@ import path from 'node:path'
 import { parseArgs } from 'node:util'
 import zlib from 'node:zlib'
 
-import { buildCards, CLASSES, liveLink, parseManifest } from '../lib/cards.mjs'
+import {
+  buildCards,
+  CLASSES,
+  liveLink,
+  parseManifest,
+  SUPPORT,
+} from '../lib/cards.mjs'
 import { renderPage } from '../lib/page.mjs'
 
 const HELP = `Usage: variant-review-portal --vcf <file> --images <dir> [--images <dir> ...] --out <dir>
@@ -130,6 +136,7 @@ const data = {
     events ? `, ${events} event${events === 1 ? '' : 's'}` : ''
   } · ${labels.join(' over ')}`,
   classes: CLASSES,
+  support: SUPPORT,
   cards,
   footer: `Images by jb2export batch. Verdicts stay in this browser until exported.`,
 }

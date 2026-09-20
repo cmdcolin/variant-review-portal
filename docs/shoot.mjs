@@ -1,10 +1,11 @@
-// Screenshot a built portal in both color schemes: node docs/shoot.mjs <portal dir> <out prefix>
+// Screenshot a built portal in both color schemes:
+//   node docs/shoot.mjs <portal dir> [out prefix] [support filter value]
 // Needs puppeteer resolvable from where it is run, and PUPPETEER_EXECUTABLE_PATH
 // where puppeteer's own download is absent.
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-const [dir, prefix = 'review-page'] = process.argv.slice(2)
+const [dir, prefix = 'review-page', support] = process.argv.slice(2)
 if (!dir) {
   console.error('usage: node docs/shoot.mjs <portal dir> [out prefix]')
   process.exit(1)
@@ -31,6 +32,9 @@ try {
       localStorage.clear()
     })
     await page.reload({ waitUntil: 'networkidle0' })
+    if (support) {
+      await page.select('#sf', support)
+    }
     // a verdict and a cursor, so the shot shows a queue in use
     await page.keyboard.press('j')
     await page.keyboard.press('1')

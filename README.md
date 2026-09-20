@@ -21,14 +21,15 @@ variant-review-portal --vcf calls.vcf.gz \
 npx serve portal
 ```
 
-![Three junctions of one rearrangement: curves join the tumor's panels and the matched normal has none](docs/review-page-light.png)
+![A somatic callset filtered to the calls whose matched normal carries split reads too: the tumor above, the normal below, each with its count](docs/review-page-light.png)
 
 The page follows the reader's theme:
 
 ![The same page in dark mode](docs/review-page-dark.png)
 
-Both are COLO829's der(3) over the ONT open-data reads; `docs/shoot.mjs`
-rebuilds them from a portal directory.
+Both are the COLO829 somatic callset over the ONT open-data reads, 135 records
+rendered in six minutes for the tumor and fifteen for the matched normal;
+`docs/shoot.mjs` rebuilds them from a portal directory.
 
 ## Install
 
@@ -54,6 +55,13 @@ than 5.0.0-beta.8.
   event visiting more than two loci has a card of its own, every locus in one
   image. JBrowse reads the standard key;
   [Severus's `CLUSTERID` takes a rename](https://jbrowse.org/jb2/docs/user_guides/sv_inspector_view/#rearrangement-events).
+- **Split reads, counted.** `jb2export` reports the split reads joining each
+  image's panels, and every image says its number. The support filter sorts a
+  callset three ways on it: no split read joins the panels, split reads in a
+  control too, split reads in the sample only. A deletion short enough for one
+  alignment to carry draws a gap and no connector, so it lands in the first
+  group with its support in plain sight: the groups order the queue and the
+  picture decides the card.
 - **A link**, given `--jbrowse`, `--config`, `--assembly` and `--tracks`: a
   breakpoint split view over the card's loci, or a linear view over one.
 
