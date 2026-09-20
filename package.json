@@ -8,6 +8,10 @@
     "vcf",
     "jbrowse"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cmdcolin/variant-review-portal.git"
+  },
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
