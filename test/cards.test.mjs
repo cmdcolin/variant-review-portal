@@ -517,6 +517,21 @@ test('the reads with a one-panel record’s ALT are its lanes’ counts', () => 
   assert.match(toTsv([braf], {}), /\tp\.Val640Glu\ttumor=31\/66;normal=0\/52\tsample\t/)
 })
 
+test('a manifest with nonref and no carriers gives the lanes that count, marked', () => {
+  const rows = parseManifest(
+    'file\tlocs\tname\tline\tevent\tlinks\tnonref\tstatus\n1.png\tchr7:1-100\t\t7\t\t\t33/66,2/52\tok',
+  )
+  const [braf] = buildCards({
+    vcfText: SMALL,
+    sets: [{ name: 't_n', labels: ['tumor', 'normal'], rows }],
+  })
+  assert.deepEqual(braf.lanes, [
+    { label: 'tumor', reads: 33, depth: 66, anyDifference: true },
+    { label: 'normal', reads: 2, depth: 52, anyDifference: true },
+  ])
+  assert.equal(braf.support, 'control')
+})
+
 test('a facet is an INFO key or FILTER on the card, a filter, and part of the address', () => {
   const all = small()
   assert.deepEqual(all[0].facets, {

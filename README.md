@@ -58,7 +58,7 @@ React, react-dom and esbuild build the page, and
 [`@gmod/vcf`](https://www.npmjs.com/package/@gmod/vcf) reads the callset. The
 images come from [`@jbrowse/img`](https://www.npmjs.com/package/@jbrowse/img),
 which puts `jb2export` on your PATH; its manifest needs the `line` column, newer
-than 5.0.0-beta.8. Small variants and the one-panel `carriers` count need a
+than 5.0.0-beta.8. Small variants and the one-panel count need a
 `jb2export` newer than 5.0.0-beta.13.
 
 ## What a card holds
@@ -70,8 +70,10 @@ than 5.0.0-beta.8. Small variants and the one-panel `carriers` count need a
 - **Supporting reads, counted per track.** For a record of two panels,
   `jb2export` reports the split reads joining them. For a record of one panel
   (an SNV, an indel, a deletion or insertion short enough to fit) it sorts the
-  pileup at the variant and reports the reads with the ALT over the reads
-  covering it. `--images tumor,normal=reads` names the tracks, and the support
+  pileup at the variant and reports the reads differing from the reference
+  there over the reads covering it, the manifest's `nonref` column. A manifest
+  with a `carriers` column, the reads with the ALT itself, is read in
+  preference: on nanopore reads a third base in one normal read is common. `--images tumor,normal=reads` names the tracks, and the support
   filter sorts a callset three ways: no supporting read, supporting reads in a
   control too, supporting reads in the sample only. One noisy base in one normal
   read files a call under the second, so the groups order the queue and the
