@@ -77,9 +77,7 @@ function Lanes({ lanes }) {
             ? 'not counted'
             : l.depth === undefined
               ? `${plural(l.reads, 'split read')} across the panels`
-              : `${l.reads} of ${plural(l.depth, 'read')} ${
-                  l.anyDifference ? 'off the reference there' : 'with the ALT'
-                }`}
+              : `${l.reads} of ${plural(l.depth, 'read')} with the ALT`}
         </span>
       ))
     : null
