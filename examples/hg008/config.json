@@ -1,0 +1,141 @@
+{
+  "assemblies": [
+    {
+      "name": "GRCh38_GIABv3",
+      "sequence": {
+        "type": "ReferenceSequenceTrack",
+        "trackId": "GRCh38_GIABv3-ReferenceSequenceTrack",
+        "adapter": {
+          "type": "BgzipFastaAdapter",
+          "fastaLocation": {
+            "uri": "https://jbrowse.org/demos/cgiab/GRCh38_GIABv3.fa.gz",
+            "locationType": "UriLocation"
+          },
+          "faiLocation": {
+            "uri": "https://jbrowse.org/demos/cgiab/GRCh38_GIABv3.fa.gz.fai",
+            "locationType": "UriLocation"
+          },
+          "gziLocation": {
+            "uri": "https://jbrowse.org/demos/cgiab/GRCh38_GIABv3.fa.gz.gzi",
+            "locationType": "UriLocation"
+          }
+        }
+      },
+      "cytobands": {
+        "adapter": {
+          "type": "CytobandAdapter",
+          "uri": "https://jbrowse.org/ucsc/hg38/hg38.cytoBand.txt.gz"
+        }
+      }
+    }
+  ],
+  "tracks": [
+    {
+      "type": "FeatureTrack",
+      "trackId": "hg38_ncbiRefSeq_ucsc",
+      "name": "NCBI RefSeq genes (hg38)",
+      "category": [
+        "Genes"
+      ],
+      "assemblyNames": [
+        "GRCh38_GIABv3"
+      ],
+      "adapter": {
+        "type": "Gff3TabixAdapter",
+        "gffGzLocation": {
+          "uri": "https://jbrowse.org/ucsc/hg38/ncbiRefSeq.gff.gz",
+          "locationType": "UriLocation"
+        },
+        "index": {
+          "location": {
+            "uri": "https://jbrowse.org/ucsc/hg38/ncbiRefSeq.gff.gz.csi",
+            "locationType": "UriLocation"
+          },
+          "indexType": "CSI"
+        }
+      }
+    },
+    {
+      "type": "VariantTrack",
+      "trackId": "hg008t_benchmark_sv",
+      "name": "HG008-T V0.5 draft benchmark somatic SVs",
+      "category": [
+        "Variant calls"
+      ],
+      "assemblyNames": [
+        "GRCh38_GIABv3"
+      ],
+      "adapter": {
+        "type": "VcfTabixAdapter",
+        "vcfGzLocation": {
+          "uri": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data_somatic/HG008/Liss_lab/analysis/NIST_HG008-T_somatic-stvar-CNV_DraftBenchmark_V0.5-20260318/GRCh38_HG008-T-V0.5_somatic-stvar_PASS.draftbenchmark.vcf.gz",
+          "locationType": "UriLocation"
+        },
+        "index": {
+          "location": {
+            "uri": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data_somatic/HG008/Liss_lab/analysis/NIST_HG008-T_somatic-stvar-CNV_DraftBenchmark_V0.5-20260318/GRCh38_HG008-T-V0.5_somatic-stvar_PASS.draftbenchmark.vcf.gz.tbi",
+            "locationType": "UriLocation"
+          },
+          "indexType": "TBI"
+        }
+      }
+    },
+    {
+      "type": "AlignmentsTrack",
+      "trackId": "hg008_tumor_hifi",
+      "name": "HG008-T tumor (PacBio HiFi, 116x)",
+      "assemblyNames": [
+        "GRCh38_GIABv3"
+      ],
+      "adapter": {
+        "type": "BamAdapter",
+        "bamLocation": {
+          "uri": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data_somatic/HG008/Liss_lab/PacBio_Revio_20240125/HG008-T_PacBio-HiFi-Revio_20240125_116x_GRCh38-GIABv3.bam",
+          "locationType": "UriLocation"
+        },
+        "index": {
+          "location": {
+            "uri": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data_somatic/HG008/Liss_lab/PacBio_Revio_20240125/HG008-T_PacBio-HiFi-Revio_20240125_116x_GRCh38-GIABv3.bam.bai",
+            "locationType": "UriLocation"
+          }
+        }
+      }
+    },
+    {
+      "type": "AlignmentsTrack",
+      "trackId": "hg008_normal_hifi",
+      "name": "HG008-N-P matched normal (PacBio HiFi, 35x)",
+      "assemblyNames": [
+        "GRCh38_GIABv3"
+      ],
+      "adapter": {
+        "type": "BamAdapter",
+        "bamLocation": {
+          "uri": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data_somatic/HG008/Liss_lab/PacBio_Revio_20240125/HG008-N-P_PacBio-HiFi-Revio_20240125_35x_GRCh38-GIABv3.bam",
+          "locationType": "UriLocation"
+        },
+        "index": {
+          "location": {
+            "uri": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data_somatic/HG008/Liss_lab/PacBio_Revio_20240125/HG008-N-P_PacBio-HiFi-Revio_20240125_35x_GRCh38-GIABv3.bam.bai",
+            "locationType": "UriLocation"
+          }
+        }
+      }
+    },
+    {
+      "type": "FeatureTrack",
+      "trackId": "repeats_hg38",
+      "name": "Repeats",
+      "assemblyNames": [
+        "GRCh38_GIABv3"
+      ],
+      "adapter": {
+        "type": "BigBedAdapter",
+        "bigBedLocation": {
+          "uri": "https://jbrowse.org/genomes/GRCh38/repeats.bb",
+          "locationType": "UriLocation"
+        }
+      }
+    }
+  ]
+}

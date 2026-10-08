@@ -106,12 +106,48 @@ than 5.0.0-beta.8. Small variants and the reads with a record's ALT need a
 - **A link**, given `--jbrowse` and `--config`: the view the image was drawn
   in, which the manifest's `spec` column holds, with the tracks `--track` named.
   A track made from a file flag such as `--bam` is in no hosted config, so the
-  link leaves it out.
+  link leaves it out. [Carrying the reads](#carrying-the-reads) puts them in
+  the portal itself.
 
 Images rendered apart still work: repeat `--images`, one directory per run, and
 a card stacks them. The first directory's rows are the cards, and every other
 joins on the record's line in the VCF, so a run with a different `--limit` shows
 which cards it lacks.
+
+## Carrying the reads
+
+A link opens the reads wherever the config says they are. Where that is a server
+a browser reaches slowly, or one that refuses a few hundred range requests,
+`variant-review-slice` cuts the reads down to the cards' windows first and
+writes a config that reads the slices:
+
+```bash
+variant-review-slice --vcf calls.vcf.gz --config config.json \
+  --tracks tumor_reads,normal_reads --out portal
+
+# render from the slices, which are local, then build into the same directory
+jb2export batch --vcf calls.vcf.gz --config portal/config.json --assembly hg38 \
+  --track tumor_reads --track normal_reads --outDir reads --manifest
+
+variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads --out portal \
+  --jbrowse https://jbrowse.org/code/jb2/latest/ \
+  --config https://example.org/portal/config.json
+```
+
+`portal/reads/` holds one CRAM a track, or a BAM where the assembly is not a
+FASTA `samtools` can read, and `portal/config.json` names them relative to
+itself, so the directory still deploys whole. `--config` on the last command is
+where that file will be served. It needs `samtools` on the PATH, and a
+`jb2export` that reads a config's relative files from beside it, newer than
+5.0.0-beta.13.
+
+The slices hold whole reads, so their size follows the read length more than the
+window: the HG008-T portal's 181 cards are 101 MB of PacBio HiFi, tumor and
+normal, beside 17 MB of images. Rendering from them took about three minutes, several
+times quicker than from the full files over the network. A link over slices shows reads at
+the cards' windows and nowhere else.
+[`examples/hg008/config.json`](examples/hg008/config.json) is the config that
+portal was sliced from.
 
 ## What comes out
 
@@ -119,6 +155,8 @@ which cards it lacks.
 portal/
   index.html      the review page: filters, verdicts, export
   img/<tracks>/   a copy of each run's images
+  config.json     with variant-review-slice: the config its links open
+  reads/          with variant-review-slice: the sliced reads
 ```
 
 Nothing points outside the directory, so `aws s3 sync portal/ s3://…` is the
