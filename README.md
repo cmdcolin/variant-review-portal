@@ -1,13 +1,14 @@
 # variant-review-portal
 
-Turn the images `jb2export batch` renders from a structural variant callset into
-a **static review portal**: one card per record, the sample and its control in
-one image, what the VCF says about the call, a verdict, and a link that opens
-the same loci live in JBrowse.
+Turn the images `jb2export batch` renders from a VCF into a **static review
+portal**: one card per record, the sample and its control in one image, what the
+VCF says about the call, a verdict, and a link that opens the same loci live in
+JBrowse. Structural variants and small variants both: a breakend is two panels
+joined by its split reads, an SNV is one panel sorted at its base.
 
-A caller returns hundreds of structural variants and a VCF says nothing about
-which are real. The reads do, and a picture of them per call is a queue a person
-can finish.
+A caller returns hundreds of variants and a VCF says nothing about which are
+real. The reads do, and a picture of them per call is a queue a person can
+finish.
 
 ```bash
 # every alignments track in one run, so each record is one image
@@ -32,6 +33,17 @@ Both are the COLO829 somatic callset over the ONT open-data reads, 135 records
 rendered from the public bucket in under five minutes; `docs/shoot.mjs` rebuilds
 them from a portal directory.
 
+Three portals built this way are hosted:
+
+- [COLO829 somatic SVs](https://jbrowse.org/demos/colo829_review/), 135 records
+  of a melanoma line and its matched normal, Oxford Nanopore
+- [HG008-T somatic SVs](https://jbrowse.org/demos/hg008_review/), the Cancer
+  Genome in a Bottle draft benchmark, PacBio HiFi, whose `EVENT` clusters visit
+  up to ten loci
+- [COLO829 somatic coding variants](https://jbrowse.org/demos/colo829_snv_review/),
+  238 SNVs and indels with a SnpEff or ClinVar annotation, _BRAF_ V600E among
+  them
+
 ## Install
 
 ```bash
@@ -50,20 +62,26 @@ than 5.0.0-beta.8.
   split view over two, with the sample's reads above its control's at each
   locus. The image scales to the window so a whole card is on screen at once;
   click it, or press <kbd>f</kbd>, for full size.
-- **Split reads, counted per track.** `jb2export` reports the split reads
-  joining each image's panels for every alignments track, and `--images
-  tumor,normal=reads` names them. The support filter sorts a callset three ways
-  on it: no split read joins the panels, split reads in a control too, split
-  reads in the sample only. A deletion short enough for one alignment to carry
-  draws a gap and no connector, so it lands in the first group with its support
-  in plain sight: the groups order the queue and the picture decides the card.
+- **Supporting reads, counted per track.** For a record of two panels,
+  `jb2export` reports the split reads joining them. For a record of one panel
+  (an SNV, an indel, a deletion or insertion short enough to fit) it sorts the
+  pileup at the variant and reports the reads with the ALT over the reads
+  covering it. `--images tumor,normal=reads` names the tracks, and the support
+  filter sorts a callset three ways: no supporting read, supporting reads in a
+  control too, supporting reads in the sample only. One noisy base in one normal
+  read files a call under the second, so the groups order the queue and the
+  picture decides the card.
 - **What the caller wrote.** The record's `SVTYPE`, size, `FILTER` and `QUAL`,
   its sample columns (`AF`, `AD`, `DP`, whatever the caller's `FORMAT` holds)
   and, under **VCF record**, every `INFO` key. Hover a key or a filter for the
   header's description of it.
-- **Genes.** A VCF annotated by SnpEff (`ANN`) or VEP (`CSQ`) puts the genes and
-  effect of its highest-impact annotation on the card, an impact filter in the
-  header, and the gene names in search.
+- **Genes.** A VCF annotated by SnpEff (`ANN`) or VEP (`CSQ`) puts the genes,
+  the effect and the protein change (`p.Val600Glu`) of its highest-impact
+  annotation on the card, an impact filter in the header, and all three in
+  search.
+- **Facets.** `--facet CLNSIG,CLNDN` prints those `INFO` keys on every card and
+  adds a filter for each to the header. `FILTER` is one already when a callset
+  has more than one.
 - **A caller's `EVENT` is a filter**, and the chip on a card selects it. An
   event visiting more than two loci has a card of its own, every locus in one
   image. JBrowse reads the standard key;
@@ -97,7 +115,8 @@ a verdict back off.
 
 <kbd>t</kbd> swaps the cards for the table, where the same keys judge a row and
 <kbd>Enter</kbd> opens its card. The order select sorts either by size, by split
-reads, or by any number in the caller's sample column.
+reads, by the reads a control has, or by any number in the caller's sample
+column.
 
 Set **Unreviewed** as the verdict filter and the queue drains as it is judged.
 
@@ -105,7 +124,7 @@ The address bar follows the filters, the order and the card under the cursor, so
 copying it is a link to that card in that queue.
 
 Verdicts and notes live in the reviewer's browser. **Export** writes them as TSV
-beside each record's line, id, coordinates, genes and split-read counts, and
+beside each record's line, id, coordinates, genes and supporting-read counts, and
 **Import** reads that TSV back, so a second reviewer or a cleared browser does
 not start the review again.
 

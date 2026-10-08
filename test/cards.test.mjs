@@ -16,6 +16,7 @@ import {
   describeKeys,
   liveLink,
   parseManifest,
+  smallVariantClass,
   supportOf,
   svClass,
 } from '../lib/cards.mjs'
@@ -89,14 +90,14 @@ test('every image set joins on the line, and says why one is missing', () => {
       src: 'img/tumor/1_a.png',
       file: '1_a.png',
       status: 'ok',
-      lanes: [{ label: 'tumor', links: 29 }],
+      lanes: [{ label: 'tumor', reads: 29 }],
     },
     {
       name: 'normal',
       src: 'img/normal/1_a.png',
       file: '1_a.png',
       status: 'ok',
-      lanes: [{ label: 'normal', links: 0 }],
+      lanes: [{ label: 'normal', reads: 0 }],
     },
   ])
   assert.deepEqual(
@@ -129,14 +130,14 @@ test('one image of two tracks is one picture with a count for each track', () =>
       1,
       'img/tumor_normal/1_a.png',
       [
-        { label: 'tumor', links: 29 },
-        { label: 'normal', links: 2 },
+        { label: 'tumor', reads: 29 },
+        { label: 'normal', reads: 2 },
       ],
       'control',
     ],
   )
   assert.deepEqual(
-    [del.lanes.map(l => l.links), del.support],
+    [del.lanes.map(l => l.reads), del.support],
     [[undefined, undefined], 'uncounted'],
   )
 })
@@ -148,12 +149,12 @@ test('an image counting more tracks than --images names is refused', () => {
         vcfText: VCF,
         sets: [{ name: 't', labels: ['t'], rows: parseManifest(BOTH) }],
       }),
-    /1_a.png counts split reads for 2 alignments tracks and --images names 1 \(t\)/,
+    /1_a.png counts reads for 2 alignments tracks and --images names 1 \(t\)/,
   )
 })
 
 test('the counts on a card’s lanes say how far the reads support it', () => {
-  const lane = links => ({ links })
+  const lane = reads => ({ reads })
   assert.deepEqual(
     [
       supportOf([lane(0), lane(0)]),
@@ -355,11 +356,11 @@ test('a callset sorts on any number its cards carry, the rest last', () => {
   const all = annotated()
   assert.deepEqual(
     sortOptions(all).map(([key]) => key),
-    ['callset', 'size', 'links', 'format:AF', 'format:NAF'],
+    ['callset', 'size', 'reads', 'format:AF', 'format:NAF'],
   )
   const order = sort => sortCards(all, sort).map(c => c.title)
   assert.deepEqual(order('format:AF'), ['ins', 'fus'])
-  assert.deepEqual(order('links'), ['fus', 'ins'])
+  assert.deepEqual(order('reads'), ['fus', 'ins'])
   assert.deepEqual(order('size'), ['ins', 'fus'])
   assert.deepEqual(order('callset'), ['fus', 'ins'])
 })
@@ -379,8 +380,8 @@ test('a note travels with its verdict through export and import', () => {
   const all = annotated()
   const tsv = toTsv(all, { 10: 'real' }, { 10: 'clean\tfan', 11: 'homopolymer' })
   const [headRow, first] = tsv.split('\n')
-  assert.ok(headRow.endsWith('split_reads\tsupport\tverdict\tnote'))
-  assert.ok(first.endsWith('NUP93,UCK2\tHIGH\tt=4\tsample\treal\tclean fan'))
+  assert.ok(headRow.endsWith('change\tsupporting_reads\tsupport\tverdict\tnote'))
+  assert.ok(first.endsWith('NUP93,UCK2\tHIGH\t\tt=4\tsample\treal\tclean fan'))
   const back = fromTsv(tsv, all)
   assert.deepEqual(back.changes, { 10: 'real', 11: null })
   assert.deepEqual(back.notes, { 10: 'clean fan', 11: 'homopolymer' })
@@ -405,4 +406,110 @@ test('an insertion with no SVLEN is as long as its SVINSLEN, never END - POS', (
     ),
     [348, undefined],
   )
+})
+
+// a small-variant callset: one panel a record, the reads with the ALT counted
+const SMALL = [
+  '##fileformat=VCFv4.3',
+  '##FILTER=<ID=LowQual,Description="Low quality">',
+  '##INFO=<ID=CLNSIG,Number=.,Type=String,Description="ClinVar significance">',
+  '##INFO=<ID=H,Number=0,Type=Flag,Description="Found in one haplotype">',
+  `##INFO=<ID=ANN,Number=.,Type=String,Description="Functional annotations: 'Allele | Annotation | Annotation_Impact | Gene_Name | Gene_ID | Feature_Type | Feature_ID | Transcript_BioType | Rank | HGVS.c | HGVS.p' ">`,
+  '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO',
+  'chr7\t140753336\t13961\tA\tT\t21\tPASS\tH;CLNSIG=Pathogenic/Likely_pathogenic;ANN=T|missense_variant|MODERATE|BRAF|BRAF|transcript|NM_1|protein_coding|16/20|c.1919T>A|p.Val640Glu',
+  'chr1\t500\t.\tACGT\tA\t9\tLowQual\tANN=A|intron_variant|MODIFIER|G1|G1|transcript|NM_2|protein_coding|1/2|c.5-3del|',
+  `chr1\t900\t.\tA\tA${'C'.repeat(20)}\t9\tPASS\t.`,
+  'chr1\t950\t.\tAC\tGT\t9\tPASS\t.',
+].join('\n')
+
+function small() {
+  const head = 'file\tlocs\tname\tline\tevent\tlinks\tcarriers\tstatus'
+  return buildCards({
+    vcfText: SMALL,
+    facets: ['FILTER', 'CLNSIG', 'H'],
+    sets: [
+      {
+        name: 'tumor_normal',
+        labels: ['tumor', 'normal'],
+        rows: parseManifest(
+          [
+            head,
+            '1.png\tchr7:140753261-140753411\t13961\t7\t\t\t31/66,0/52\tok',
+            '2.png\tchr1:425-578\t\t8\t\t\t4/30,3/28\tok',
+            '3.png\tchr1:825-975\t\t9\t\t\t0/30,0/28\tok',
+            '4.png\tchr1:875-1026\t\t10\t\t\t\tok',
+          ].join('\n'),
+        ),
+      },
+    ],
+  })
+}
+
+test('a record with no SVTYPE is classed by the alleles it spells out', () => {
+  assert.deepEqual(
+    [
+      smallVariantClass('A', 'T'),
+      smallVariantClass('AC', 'GT'),
+      smallVariantClass('ACGT', 'A'),
+      smallVariantClass('A', 'ACC'),
+      smallVariantClass('A', '<NON_REF>'),
+    ],
+    ['SNV', 'MNV', 'DEL', 'INS', 'OTHER'],
+  )
+  assert.deepEqual(
+    small().map(c => [c.cls, c.size, c.alleles]),
+    [
+      ['SNV', undefined, 'A>T'],
+      ['DEL', 3, 'ACGT>A'],
+      ['INS', 20, 'A>ACCCCCCCCCCC…(21)'],
+      ['MNV', undefined, 'AC>GT'],
+    ],
+  )
+})
+
+test('a small variant’s card says the protein change, else the coding one, else the alleles', () => {
+  assert.deepEqual(
+    small().map(c => [c.genes.join(), c.change]),
+    [
+      ['BRAF', 'p.Val640Glu'],
+      ['G1', 'c.5-3del'],
+      ['', 'A>ACCCCCCCCCCC…(21)'],
+      ['', 'AC>GT'],
+    ],
+  )
+})
+
+test('the reads with a one-panel record’s ALT are its lanes’ counts', () => {
+  const [braf, del, ins, mnv] = small()
+  assert.deepEqual(braf.lanes, [
+    { label: 'tumor', reads: 31, depth: 66 },
+    { label: 'normal', reads: 0, depth: 52 },
+  ])
+  assert.deepEqual(
+    [braf.support, del.support, ins.support, mnv.support],
+    ['sample', 'control', 'none', 'uncounted'],
+  )
+  assert.deepEqual(
+    sortCards(small(), 'control').map(c => c.id),
+    ['8', '7', '9', '10'],
+  )
+  assert.match(toTsv([braf], {}), /\tp\.Val640Glu\ttumor=31\/66;normal=0\/52\tsample\t/)
+})
+
+test('a facet is an INFO key or FILTER on the card, a filter, and part of the address', () => {
+  const all = small()
+  assert.deepEqual(all[0].facets, {
+    FILTER: 'PASS',
+    CLNSIG: 'Pathogenic/Likely_pathogenic',
+    H: 'H',
+  })
+  assert.deepEqual(all[1].facets, { FILTER: 'LowQual' })
+  const kept = filter =>
+    all.filter(c => matches(c, { ...filter, verdicts: {} })).map(c => c.id)
+  assert.deepEqual(kept({ 'facet:FILTER': 'LowQual' }), ['8'])
+  assert.deepEqual(kept({ 'facet:CLNSIG': 'Pathogenic/Likely_pathogenic' }), ['7'])
+  assert.deepEqual(kept({ 'facet:CLNSIG': 'all', q: 'val640glu' }), ['7'])
+  const hash = toHash({ 'facet:CLNSIG': 'Pathogenic/Likely_pathogenic', 'facet:H': 'all' })
+  assert.equal(hash, '#facet%3ACLNSIG=Pathogenic%2FLikely_pathogenic')
+  assert.equal(fromHash(hash)['facet:CLNSIG'], 'Pathogenic/Likely_pathogenic')
 })

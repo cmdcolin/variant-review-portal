@@ -19,8 +19,8 @@ import { renderPage } from '../lib/page.mjs'
 
 const HELP = `Usage: variant-review-portal --vcf <file> --images <tracks>=<dir> --out <dir>
 
-Builds a static review page over a structural variant callset: one card per
-record, the sample and its control in one image, what the VCF says about the
+Builds a static review page over a VCF of structural or small variants: one card
+per record, the sample and its control in one image, what the VCF says about the
 call, a verdict and a link that opens the same loci live.
 
 Render the images first, every alignments track in one run:
@@ -40,6 +40,9 @@ Options:
               first directory's rows are the cards
   --out       directory to write the portal to
   --title     page heading (default: the VCF's file name)
+  --facet     an INFO key to print on every card and filter the queue on, such
+              as CLNSIG or SUBCLONAL; repeat or separate with commas. FILTER is
+              one already when the callset has more than one
 
   A link on every card, given all four:
   --jbrowse   URL of a JBrowse Web to open cards in
@@ -68,6 +71,7 @@ const { values } = parseArgs({
     images: { type: 'string', multiple: true },
     out: { type: 'string' },
     title: { type: 'string' },
+    facet: { type: 'string', multiple: true },
     jbrowse: { type: 'string' },
     config: { type: 'string' },
     assembly: { type: 'string' },
@@ -126,7 +130,15 @@ const link = values.jbrowse
 const vcfText = readMaybeGzip(vcf)
 let cards
 try {
-  cards = buildCards({ vcfText, sets, link })
+  cards = buildCards({
+    vcfText,
+    sets,
+    link,
+    facets: [
+      'FILTER',
+      ...(values.facet ?? []).flatMap(f => f.split(',')).filter(Boolean),
+    ],
+  })
 } catch (error) {
   fail(error.message)
 }
@@ -159,6 +171,27 @@ for (const card of cards) {
   }
 }
 
+// A facet every card agrees on filters nothing, and one with a value a card
+// (an inserted sequence, a free-text field) is a search box, not a select.
+const FACET_VALUES_MAX = 40
+
+function facetOptions(cards) {
+  const values = new Map()
+  for (const card of cards) {
+    for (const [key, value] of Object.entries(card.facets)) {
+      const counts = values.get(key) ?? new Map()
+      counts.set(value, (counts.get(value) ?? 0) + 1)
+      values.set(key, counts)
+    }
+  }
+  return [...values]
+    .filter(([, counts]) => counts.size > 1 && counts.size <= FACET_VALUES_MAX)
+    .map(([key, counts]) => ({
+      key,
+      values: [...counts].sort(([, a], [, b]) => b - a),
+    }))
+}
+
 const title = values.title ?? path.basename(vcf)
 const records = cards.filter(c => c.kind === 'record').length
 const events = cards.length - records
@@ -172,6 +205,7 @@ const data = {
   } · ${labels.join(' and ')}`,
   classes: CLASSES,
   support: SUPPORT,
+  facets: facetOptions(cards),
   describe: describeKeys(vcfText, cards),
   cards,
   footer: `Images by jb2export batch. Verdicts stay in this browser until exported.`,

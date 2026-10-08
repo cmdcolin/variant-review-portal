@@ -26,6 +26,12 @@
         /* what reads on top of an accent, once the accent is the background */
         --on-accent: light-dark(#fff, #10131a);
       }
+      [data-cls='SNV'] {
+        --cls: light-dark(#0f766e, #5eead4);
+      }
+      [data-cls='MNV'] {
+        --cls: light-dark(#4d7c0f, #bef264);
+      }
       [data-cls='DEL'] {
         --cls: light-dark(#e41a1c, #ff8a8a);
       }
@@ -155,6 +161,12 @@
       input[type='search'] {
         min-width: 190px;
       }
+      /* a select is as wide as its longest option, and a facet's can be a
+         sentence */
+      header select {
+        max-width: 250px;
+        text-overflow: ellipsis;
+      }
       button {
         cursor: pointer;
       }
@@ -271,6 +283,28 @@
         font-weight: 600;
       }
       .effect {
+        color: GrayText;
+      }
+      .change {
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+      }
+      /* A ClinVar disease list runs to a paragraph: the chip keeps one line of
+         it and the title has the rest. */
+      .facet {
+        padding: 0 7px;
+        border: 1px solid ButtonBorder;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        max-width: 48ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .facet b {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
         color: GrayText;
       }
       .impact,
@@ -550,8 +584,11 @@
         font-family: ui-monospace, monospace;
         font-size: 12px;
       }
+      /* an event of ten loci wraps between them, never inside one */
       .index .where {
         color: GrayText;
+      }
+      .index .where span {
         white-space: nowrap;
       }
       .index .open {

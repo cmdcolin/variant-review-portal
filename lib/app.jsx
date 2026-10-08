@@ -4,8 +4,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
+  FACET_PREFIX,
   FILTER_DEFAULTS,
   fromHash,
+  laneCount,
   fromTsv,
   matches,
   sizeLabel,
@@ -35,7 +37,7 @@ function facts(card) {
     return [plural(card.members, 'record'), `${card.locs.length} loci`]
   }
   return [
-    card.svtype,
+    card.svtype || card.alleles,
     sizeLabel(card.size),
     card.qual === undefined ? '' : `QUAL ${card.qual}`,
     card.eventType,
@@ -49,7 +51,7 @@ function geneLabel(card) {
     : genes.join(' · ')
 }
 
-const isFailing = filter => filter !== 'PASS' && filter !== '.'
+const isFailing = filter => !!filter && filter !== 'PASS' && filter !== '.'
 
 function Filter({ card, describe }) {
   return isFailing(card.filter) ? (
@@ -67,16 +69,35 @@ function Filter({ card, describe }) {
 }
 
 function Lanes({ lanes }) {
-  return lanes.some(l => l.links !== undefined)
+  return lanes.some(l => l.reads !== undefined)
     ? lanes.map(l => (
-        <span className="lane" key={l.label} data-zero={!l.links}>
+        <span className="lane" key={l.label} data-zero={!l.reads}>
           <b>{l.label}</b>
-          {l.links === undefined
+          {l.reads === undefined
             ? 'not counted'
-            : `${plural(l.links, 'split read')} across the panels`}
+            : l.depth === undefined
+              ? `${plural(l.reads, 'split read')} across the panels`
+              : `${l.reads} of ${plural(l.depth, 'read')} with the ALT`}
         </span>
       ))
     : null
+}
+
+// FILTER has a chip of its own, coloured as a warning
+function Facets({ card, describe }) {
+  return Object.entries(card.facets)
+    .filter(([key]) => key !== 'FILTER')
+    .map(([key, value]) => (
+      <span
+        className="facet"
+        key={key}
+        title={[describe.INFO[key], value.replaceAll('_', ' ')]
+          .filter(Boolean)
+          .join('\n\n')}
+      >
+        <b>{key}</b> {value.replaceAll('_', ' ')}
+      </span>
+    ))
 }
 
 function Fields({ rows, descriptions }) {
@@ -128,6 +149,9 @@ const Card = React.memo(function Card({
             {geneLabel(card)}
           </span>
         ) : null}
+        {card.change && card.change !== card.alleles ? (
+          <span className="change">{card.change}</span>
+        ) : null}
         {card.effects.length ? (
           <span className="effect">{card.effects.join(', ')}</span>
         ) : null}
@@ -136,6 +160,7 @@ const Card = React.memo(function Card({
             {card.impact}
           </span>
         ) : null}
+        <Facets card={card} describe={describe} />
         {card.event && card.kind === 'record' ? (
           <button
             type="button"
@@ -153,7 +178,7 @@ const Card = React.memo(function Card({
           {[...facts(card), card.locs.join(' ↔ ')].join(' · ')}
         </span>
       </div>
-      {card.lanes.some(l => l.links !== undefined) || card.samples.length ? (
+      {card.lanes.some(l => l.reads !== undefined) || card.samples.length ? (
         <div className="evidence">
           <Lanes lanes={card.lanes} />
           {card.samples.map(s => (
@@ -193,7 +218,7 @@ const Card = React.memo(function Card({
           ) : (
             <div className="missing">
               {img.status === 'failed'
-                ? 'This render failed. Rerun jb2export batch with --resume to draw it; the link still opens it live.'
+                ? `This render failed. Rerun jb2export batch with --resume to draw it${card.url ? '; the link still opens it live' : ''}.`
                 : 'This run has no image for the record: its --limit or --passOnly differed.'}
             </div>
           )}
@@ -272,7 +297,11 @@ function Table({
           <th>Where</th>
           <th className="n">Size</th>
           {lanes.map(l => (
-            <th className="n" key={l} title="Split reads across the panels">
+            <th
+              className="n"
+              key={l}
+              title="Split reads across the panels, or reads with the ALT of those covering it"
+            >
               {l}
             </th>
           ))}
@@ -320,19 +349,32 @@ function Table({
               </td>
               <td title={[...card.genes, ...card.effects].join(', ')}>
                 <span className="genes">{geneLabel(card)}</span>{' '}
+                {card.change ? (
+                  <span className="change">{card.change} </span>
+                ) : null}
                 {card.impact ? (
                   <span className="impact" data-impact={card.impact}>
                     {card.impact}
                   </span>
                 ) : null}
               </td>
-              <td className="where">{card.locs.join(' ↔ ')}</td>
+              <td className="where">
+                {card.locs.map((loc, i) => (
+                  <React.Fragment key={loc}>
+                    {i ? ' ' : ''}
+                    <span>
+                      {i ? '↔ ' : ''}
+                      {loc}
+                    </span>
+                  </React.Fragment>
+                ))}
+              </td>
               <td className="n">{sizeLabel(card.size)}</td>
               {lanes.map(l => {
-                const links = card.lanes.find(lane => lane.label === l)?.links
+                const lane = card.lanes.find(lane => lane.label === l)
                 return (
-                  <td className="n" key={l} data-zero={!links}>
-                    {links ?? ''}
+                  <td className="n" key={l} data-zero={!lane?.reads}>
+                    {lane ? laneCount(lane) : ''}
                   </td>
                 )
               })}
@@ -739,7 +781,7 @@ export function App({ data }) {
     () => [
       ...new Set(
         data.cards.flatMap(c =>
-          c.lanes.filter(l => l.links !== undefined).map(l => l.label),
+          c.lanes.filter(l => l.reads !== undefined).map(l => l.label),
         ),
       ),
     ],
@@ -747,8 +789,8 @@ export function App({ data }) {
   )
 
   const pct = x => `${data.cards.length ? (x / data.cards.length) * 100 : 0}%`
-  const filtered = Object.entries(FILTER_DEFAULTS).some(
-    ([key, fallback]) => filter[key] !== fallback,
+  const filtered = Object.entries(filter).some(
+    ([key, value]) => value !== (FILTER_DEFAULTS[key] ?? 'all'),
   )
 
   return (
@@ -908,6 +950,25 @@ export function App({ data }) {
               ))}
             </select>
           ) : null}
+          {data.facets.map(({ key, values }) => (
+            <select
+              key={key}
+              data-facet={key}
+              aria-label={`Filter by ${key}`}
+              title={data.describe.INFO[key]}
+              value={filter[FACET_PREFIX + key] ?? 'all'}
+              onChange={e => {
+                patchFilter({ [FACET_PREFIX + key]: e.target.value })
+              }}
+            >
+              <option value="all">Any {key}</option>
+              {values.map(([value, n]) => (
+                <option key={value} value={value}>
+                  {value.replaceAll('_', ' ')} ({n})
+                </option>
+              ))}
+            </select>
+          ))}
           {impacts.length ? (
             <select
               id="if"
@@ -959,7 +1020,7 @@ export function App({ data }) {
             type="search"
             id="q"
             ref={searchInput}
-            placeholder="Find a gene, id, event or chromosome"
+            placeholder="Find a gene, change, id or chromosome"
             value={filter.q}
             onChange={e => {
               patchFilter({ q: e.target.value })
