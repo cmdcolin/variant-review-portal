@@ -247,6 +247,21 @@ test('a link opens several loci as a split view and one as a linear view', () =>
       },
     ],
   })
+  // two ends on one contig are one row, as the image draws them: the tracks'
+  // read arcs join the windows, split reads first
+  assert.deepEqual(spec(link(['chr1:1-2', 'chr1:300-400'])), {
+    views: [
+      {
+        type: 'LinearGenomeView',
+        loc: 'chr1:1-2 chr1:300-400',
+        assembly: 'hg38',
+        tracks: [
+          { trackId: 't', readConnections: 'arc', layoutOrder: 'split' },
+          { trackId: 'n', readConnections: 'arc', layoutOrder: 'split' },
+        ],
+      },
+    ],
+  })
   assert.deepEqual(spec(link(['chr1:1-2'])), {
     views: [
       { type: 'LinearGenomeView', loc: 'chr1:1-2', assembly: 'hg38', tracks: ['t', 'n'] },

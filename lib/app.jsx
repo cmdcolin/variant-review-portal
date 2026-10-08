@@ -76,7 +76,7 @@ function Lanes({ lanes }) {
           {l.reads === undefined
             ? 'not counted'
             : l.depth === undefined
-              ? `${plural(l.reads, 'split read')} across the panels`
+              ? `${plural(l.reads, 'split read')} joining the loci`
               : `${l.reads} of ${plural(l.depth, 'read')} with the ALT`}
         </span>
       ))
@@ -300,7 +300,7 @@ function Table({
             <th
               className="n"
               key={l}
-              title="Split reads across the panels, or reads with the ALT of those covering it"
+              title="Split reads joining the loci, or reads with the ALT of those covering it"
             >
               {l}
             </th>

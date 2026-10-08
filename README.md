@@ -63,11 +63,13 @@ than 5.0.0-beta.8. Small variants and the one-panel count need a
 
 ## What a card holds
 
-- **One image, every track.** A linear view over one locus, or a breakpoint
-  split view over two, with the sample's reads above its control's at each
-  locus. The image scales to the window so a whole card is on screen at once;
+- **One image, every track.** A record one window holds is a linear view of it.
+  Two ends on one chromosome, a deletion, duplication or inversion, are one row
+  too: both ends side by side under the arc of the reads joining them, split
+  reads on top. A junction between two chromosomes is a breakpoint split view,
+  one panel a locus. Each has the sample's reads above its control's. The image scales to the window so a whole card is on screen at once;
   click it, or press <kbd>f</kbd>, for full size.
-- **Supporting reads, counted per track.** For a record of two panels,
+- **Supporting reads, counted per track.** For a record of two loci,
   `jb2export` reports the split reads joining them. For a record of one panel
   (an SNV, an indel, a deletion or insertion short enough to fit) it sorts the
   pileup at the variant and reports the reads with the ALT over the reads
@@ -92,8 +94,8 @@ than 5.0.0-beta.8. Small variants and the one-panel count need a
   event visiting more than two loci has a card of its own, every locus in one
   image. JBrowse reads the standard key;
   [Severus's `CLUSTERID` takes a rename](https://jbrowse.org/jb2/docs/user_guides/sv_inspector_view/#rearrangement-events).
-- **A link**, given `--jbrowse`, `--config`, `--assembly` and `--tracks`: a
-  breakpoint split view over the card's loci, or a linear view over one.
+- **A link**, given `--jbrowse`, `--config`, `--assembly` and `--tracks`: the
+  card's loci in the view its image was drawn in.
 
 Images rendered apart still work: repeat `--images`, one directory per run, and
 a card stacks them. The first directory's rows are the cards, and every other
