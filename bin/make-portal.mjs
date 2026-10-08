@@ -9,6 +9,7 @@ import zlib from 'node:zlib'
 
 import {
   buildCards,
+  describeKeys,
   CLASSES,
   liveLink,
   parseManifest,
@@ -16,26 +17,27 @@ import {
 } from '../lib/cards.mjs'
 import { renderPage } from '../lib/page.mjs'
 
-const HELP = `Usage: variant-review-portal --vcf <file> --images <dir> [--images <dir> ...] --out <dir>
+const HELP = `Usage: variant-review-portal --vcf <file> --images <tracks>=<dir> --out <dir>
 
 Builds a static review page over a structural variant callset: one card per
-record, its images stacked, a verdict and a link that opens the same loci live.
+record, the sample and its control in one image, what the VCF says about the
+call, a verdict and a link that opens the same loci live.
 
-Render the images first, one directory per sample, from the same VCF:
+Render the images first, every alignments track in one run:
 
   jb2export batch --vcf calls.vcf.gz --config config.json --assembly hg38 \\
-    --track tumor_reads --outDir tumor --manifest
-  jb2export batch --vcf calls.vcf.gz --config config.json --assembly hg38 \\
-    --track normal_reads --outDir normal --manifest
+    --track tumor_reads --track normal_reads --outDir reads --manifest
 
-  variant-review-portal --vcf calls.vcf.gz --images tumor --images normal --out portal
+  variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads --out portal
 
 Options:
-  --vcf       the VCF (plain or bgzipped) both runs read
-  --images    a jb2export batch --outDir holding manifest.tsv; repeat for each
-              sample. The first is the sample under review, and its rows are
-              the cards. Write label=dir to name one; the default is the
-              directory's name
+  --vcf       the VCF (plain or bgzipped) the run read
+  --images    <tracks>=<dir>: a jb2export batch --outDir holding manifest.tsv,
+              and a name for each alignments track drawn in its images, comma
+              separated, in track order. The first track is the sample under
+              review and the rest are its controls. A bare <dir> is one track
+              named after the directory. Repeat for images rendered apart: the
+              first directory's rows are the cards
   --out       directory to write the portal to
   --title     page heading (default: the VCF's file name)
 
@@ -86,16 +88,26 @@ if (!vcf || !images?.length || !out) {
 const sets = images.map(arg => {
   const eq = arg.indexOf('=')
   const dir = eq === -1 ? arg : arg.slice(eq + 1)
-  const label = eq === -1 ? path.basename(path.resolve(dir)) : arg.slice(0, eq)
+  const labels = (
+    eq === -1 ? path.basename(path.resolve(dir)) : arg.slice(0, eq)
+  )
+    .split(',')
+    .map(l => l.trim())
+    .filter(Boolean)
   const manifest = path.join(dir, 'manifest.tsv')
   if (!fs.existsSync(manifest)) {
     fail(`${manifest} not found: render ${dir} with jb2export batch --manifest`)
   }
-  return { label, dir, rows: parseManifest(fs.readFileSync(manifest, 'utf8')) }
+  return {
+    name: labels.join('_'),
+    labels,
+    dir,
+    rows: parseManifest(fs.readFileSync(manifest, 'utf8')),
+  }
 })
-const labels = sets.map(s => s.label)
+const labels = sets.flatMap(s => s.labels)
 if (new Set(labels).size !== labels.length) {
-  fail(`two --images share the label "${labels.find((l, i) => labels.indexOf(l) !== i)}": name them with label=dir`)
+  fail(`two tracks share the name "${labels.find((l, i) => labels.indexOf(l) !== i)}": name each with --images a,b=dir`)
 }
 
 const linkOpts = [values.jbrowse, values.config, values.assembly, values.tracks]
@@ -112,14 +124,37 @@ const link = values.jbrowse
   : undefined
 
 const vcfText = readMaybeGzip(vcf)
-const cards = buildCards({ vcfText, sets, link })
+let cards
+try {
+  cards = buildCards({ vcfText, sets, link })
+} catch (error) {
+  fail(error.message)
+}
 
-for (const { label, dir, rows } of sets) {
-  const dest = path.join(out, 'img', label)
-  fs.mkdirSync(dest, { recursive: true })
-  for (const { file, status } of rows) {
-    if (status !== 'failed' && fs.existsSync(path.join(dir, file))) {
-      fs.copyFileSync(path.join(dir, file), path.join(dest, file))
+// A PNG states its size in its first chunk. The page reserves that box before
+// the image loads, so a lazily loaded queue does not move under the cursor.
+function pngSize(file) {
+  const head = Buffer.alloc(24)
+  const fd = fs.openSync(file, 'r')
+  fs.readSync(fd, head, 0, 24, 0)
+  fs.closeSync(fd)
+  return head.toString('latin1', 1, 4) === 'PNG'
+    ? { width: head.readUInt32BE(16), height: head.readUInt32BE(20) }
+    : {}
+}
+
+const dirOf = new Map(sets.map(s => [s.name, s.dir]))
+for (const card of cards) {
+  for (const image of card.images) {
+    const from = image.file && path.join(dirOf.get(image.name), image.file)
+    if (image.src && fs.existsSync(from)) {
+      const dest = path.join(out, 'img', image.name)
+      fs.mkdirSync(dest, { recursive: true })
+      fs.copyFileSync(from, path.join(dest, image.file))
+      Object.assign(image, pngSize(from))
+    } else if (image.src) {
+      image.src = undefined
+      image.status = 'absent'
     }
   }
 }
@@ -134,11 +169,13 @@ const data = {
   title,
   eyebrow: `${records} record${records === 1 ? '' : 's'}${
     events ? `, ${events} event${events === 1 ? '' : 's'}` : ''
-  } · ${labels.join(' over ')}`,
+  } · ${labels.join(' and ')}`,
   classes: CLASSES,
   support: SUPPORT,
+  describe: describeKeys(vcfText, cards),
   cards,
   footer: `Images by jb2export batch. Verdicts stay in this browser until exported.`,
 }
+fs.mkdirSync(out, { recursive: true })
 fs.writeFileSync(path.join(out, 'index.html'), await renderPage({ data, title }))
 console.log(`wrote ${cards.length} cards to ${path.join(out, 'index.html')}`)

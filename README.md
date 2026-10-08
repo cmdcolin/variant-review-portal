@@ -1,35 +1,36 @@
 # variant-review-portal
 
 Turn the images `jb2export batch` renders from a structural variant callset into
-a **static review portal**: one card per record, the sample above its control, a
-verdict, and a link that opens the same loci live in JBrowse.
+a **static review portal**: one card per record, the sample and its control in
+one image, what the VCF says about the call, a verdict, and a link that opens
+the same loci live in JBrowse.
 
 A caller returns hundreds of structural variants and a VCF says nothing about
 which are real. The reads do, and a picture of them per call is a queue a person
 can finish.
 
 ```bash
-# one directory of images per sample, from the same VCF
+# every alignments track in one run, so each record is one image
 jb2export batch --vcf calls.vcf.gz --config config.json --assembly hg38 \
-  --track tumor_reads --outDir tumor --manifest
-jb2export batch --vcf calls.vcf.gz --config config.json --assembly hg38 \
-  --track normal_reads --outDir normal --manifest
+  --track tumor_reads --track normal_reads --outDir reads --manifest
 
+# name the tracks in the images, in track order: the sample, then its controls
 variant-review-portal --vcf calls.vcf.gz \
-  --images tumor --images normal --out portal
+  --images tumor,normal=reads --out portal
 
 npx serve portal
 ```
 
-![A somatic callset filtered to the calls whose matched normal carries split reads too: the tumor above, the normal below, each with its count](docs/review-page-light.png)
+![A somatic callset filtered to the calls whose matched normal carries split reads too: tumor and normal at each breakpoint in one image, with a count for each](docs/review-page-light.png)
 
-The page follows the reader's theme:
+The page follows the reader's theme, and the table lists the same queue a line a
+card:
 
-![The same page in dark mode](docs/review-page-dark.png)
+![The same callset as a table in dark mode, ordered by the caller's allele fraction](docs/review-table-dark.png)
 
 Both are the COLO829 somatic callset over the ONT open-data reads, 135 records
-rendered in six minutes for the tumor and fifteen for the matched normal;
-`docs/shoot.mjs` rebuilds them from a portal directory.
+rendered from the public bucket in under five minutes; `docs/shoot.mjs` rebuilds
+them from a portal directory.
 
 ## Install
 
@@ -45,32 +46,42 @@ than 5.0.0-beta.8.
 
 ## What a card holds
 
-- **The first `--images` directory is the sample under review**, and its
-  manifest rows are the cards. Every other directory joins to it on the record's
-  line in the VCF, so a control rendered with a different `--limit` shows which
-  cards it lacks.
-- **The facts are the VCF's own columns**: `SVTYPE`, `SVLEN`, `FILTER`, `QUAL`,
-  `EVENT`, `EVENTTYPE`.
+- **One image, every track.** A linear view over one locus, or a breakpoint
+  split view over two, with the sample's reads above its control's at each
+  locus. The image scales to the window so a whole card is on screen at once;
+  click it, or press <kbd>f</kbd>, for full size.
+- **Split reads, counted per track.** `jb2export` reports the split reads
+  joining each image's panels for every alignments track, and `--images
+  tumor,normal=reads` names them. The support filter sorts a callset three ways
+  on it: no split read joins the panels, split reads in a control too, split
+  reads in the sample only. A deletion short enough for one alignment to carry
+  draws a gap and no connector, so it lands in the first group with its support
+  in plain sight: the groups order the queue and the picture decides the card.
+- **What the caller wrote.** The record's `SVTYPE`, size, `FILTER` and `QUAL`,
+  its sample columns (`AF`, `AD`, `DP`, whatever the caller's `FORMAT` holds)
+  and, under **VCF record**, every `INFO` key. Hover a key or a filter for the
+  header's description of it.
+- **Genes.** A VCF annotated by SnpEff (`ANN`) or VEP (`CSQ`) puts the genes and
+  effect of its highest-impact annotation on the card, an impact filter in the
+  header, and the gene names in search.
 - **A caller's `EVENT` is a filter**, and the chip on a card selects it. An
   event visiting more than two loci has a card of its own, every locus in one
   image. JBrowse reads the standard key;
   [Severus's `CLUSTERID` takes a rename](https://jbrowse.org/jb2/docs/user_guides/sv_inspector_view/#rearrangement-events).
-- **Split reads, counted.** `jb2export` reports the split reads joining each
-  image's panels, and every image says its number. The support filter sorts a
-  callset three ways on it: no split read joins the panels, split reads in a
-  control too, split reads in the sample only. A deletion short enough for one
-  alignment to carry draws a gap and no connector, so it lands in the first
-  group with its support in plain sight: the groups order the queue and the
-  picture decides the card.
 - **A link**, given `--jbrowse`, `--config`, `--assembly` and `--tracks`: a
   breakpoint split view over the card's loci, or a linear view over one.
+
+Images rendered apart still work: repeat `--images`, one directory per run, and
+a card stacks them. The first directory's rows are the cards, and every other
+joins on the record's line in the VCF, so a run with a different `--limit` shows
+which cards it lacks.
 
 ## What comes out
 
 ```
 portal/
   index.html      the review page: filters, verdicts, export
-  img/<sample>/   a copy of each run's images
+  img/<tracks>/   a copy of each run's images
 ```
 
 Nothing points outside the directory, so `aws s3 sync portal/ s3://…` is the
@@ -80,19 +91,29 @@ whole deployment.
 
 The queue takes the keyboard: <kbd>j</kbd> and <kbd>k</kbd> move,
 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> are real / needs a look / artifact on the
-card under the cursor, <kbd>o</kbd> opens it in JBrowse and <kbd>/</kbd> jumps to
-the search box. The same digit twice takes a verdict back off.
+card under the cursor, <kbd>n</kbd> writes a note on it, <kbd>o</kbd> opens it
+in JBrowse and <kbd>/</kbd> jumps to the search box. The same digit twice takes
+a verdict back off.
+
+<kbd>t</kbd> swaps the cards for the table, where the same keys judge a row and
+<kbd>Enter</kbd> opens its card. The order select sorts either by size, by split
+reads, or by any number in the caller's sample column.
 
 Set **Unreviewed** as the verdict filter and the queue drains as it is judged.
 
-Verdicts live in the reviewer's browser. **Export** writes them as TSV beside
-each record's line, id and coordinates, and **Import** reads that TSV back, so a
-second reviewer or a cleared browser does not start the review again.
+The address bar follows the filters, the order and the card under the cursor, so
+copying it is a link to that card in that queue.
+
+Verdicts and notes live in the reviewer's browser. **Export** writes them as TSV
+beside each record's line, id, coordinates, genes and split-read counts, and
+**Import** reads that TSV back, so a second reviewer or a cleared browser does
+not start the review again.
 
 ## Test
 
 ```bash
-pnpm test
+pnpm test           # the card and review logic, no browser
+pnpm test:browser   # a built portal driven in Chrome
 ```
 
 ## License
