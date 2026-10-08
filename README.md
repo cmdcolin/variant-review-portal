@@ -33,6 +33,10 @@ Both are the COLO829 somatic callset over the ONT open-data reads, 135 records
 rendered from the public bucket in under five minutes; `docs/shoot.mjs` rebuilds
 them from a portal directory.
 
+A small-variant callset is the same page, one panel a card:
+
+![COLO829's BRAF V600E: the ALT base in 64 of 88 tumor reads and none of the normal's, with its ClinVar significance on the card](docs/review-snv-light.png)
+
 Three portals built this way are hosted:
 
 - [COLO829 somatic SVs](https://jbrowse.org/demos/colo829_review/), 135 records
@@ -54,7 +58,8 @@ React, react-dom and esbuild build the page, and
 [`@gmod/vcf`](https://www.npmjs.com/package/@gmod/vcf) reads the callset. The
 images come from [`@jbrowse/img`](https://www.npmjs.com/package/@jbrowse/img),
 which puts `jb2export` on your PATH; its manifest needs the `line` column, newer
-than 5.0.0-beta.8.
+than 5.0.0-beta.8. Small variants and the one-panel `carriers` count need a
+`jb2export` newer than 5.0.0-beta.13.
 
 ## What a card holds
 

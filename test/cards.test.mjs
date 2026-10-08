@@ -479,6 +479,27 @@ test('a small variant’s card says the protein change, else the coding one, els
   )
 })
 
+test('a structural variant’s card has no change: its HGVS is not one', () => {
+  const vcfText = [
+    '##fileformat=VCFv4.3',
+    '##INFO=<ID=SVTYPE,Number=1,Type=String,Description="">',
+    `##INFO=<ID=ANN,Number=.,Type=String,Description="Functional annotations: 'Allele | Annotation | Annotation_Impact | Gene_Name | Gene_ID | Feature_Type | Feature_ID | Transcript_BioType | Rank | HGVS.c | HGVS.p' ">`,
+    '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO',
+    'chr1\t100\tfus\tN\t]chr16:500]N\t.\tPASS\tSVTYPE=BND;ANN=x|gene_fusion|HIGH|NUP93&UCK2|g|transcript|NM_1|protein_coding|3/6|t(1%3B16)(%3B)(c.356+826)|t(1%3B16)(NM_012474.5:Arg119_Ter262%3BNM_001242796.2:Met1)',
+  ].join('\n')
+  const [fus] = buildCards({
+    vcfText,
+    sets: [
+      {
+        name: 't',
+        labels: ['t'],
+        rows: parseManifest(`${head}\n1.png\tchr1:1-200 chr16:400-600\tfus\t5\t\t4\tok`),
+      },
+    ],
+  })
+  assert.deepEqual([fus.genes, fus.change], [['NUP93', 'UCK2'], ''])
+})
+
 test('the reads with a one-panel record’s ALT are its lanes’ counts', () => {
   const [braf, del, ins, mnv] = small()
   assert.deepEqual(braf.lanes, [

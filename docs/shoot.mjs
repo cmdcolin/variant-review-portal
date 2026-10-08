@@ -13,7 +13,7 @@ if (!dir) {
 // the calls a matched normal carries too, most split reads first; then the
 // whole callset as a table on the caller's allele fraction
 const SHOTS = [
-  { name: 'review-page-light', scheme: 'light', hash: '#support=control&sort=links', keys: ['j', '1', 'j'] },
+  { name: 'review-page-light', scheme: 'light', hash: '#support=control&sort=reads', keys: ['j', '1', 'j'] },
   { name: 'review-table-dark', scheme: 'dark', hash: '#sort=format%3AAF&view=table', keys: ['j', '1', 'j', '3', 'j'] },
 ]
 const { default: puppeteer } = await import('puppeteer')
