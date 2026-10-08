@@ -90,14 +90,14 @@ test('every image set joins on the line, and says why one is missing', () => {
       src: 'img/tumor/1_a.png',
       file: '1_a.png',
       status: 'ok',
-      lanes: [{ label: 'tumor', reads: 29 }],
+      lanes: [{ label: 'tumor', split: 29, reads: 29 }],
     },
     {
       name: 'normal',
       src: 'img/normal/1_a.png',
       file: '1_a.png',
       status: 'ok',
-      lanes: [{ label: 'normal', reads: 0 }],
+      lanes: [{ label: 'normal', split: 0, reads: 0 }],
     },
   ])
   assert.deepEqual(
@@ -130,8 +130,8 @@ test('one image of two tracks is one picture with a count for each track', () =>
       1,
       'img/tumor_normal/1_a.png',
       [
-        { label: 'tumor', reads: 29 },
-        { label: 'normal', reads: 2 },
+        { label: 'tumor', split: 29, reads: 29 },
+        { label: 'normal', split: 2, reads: 2 },
       ],
       'control',
     ],
@@ -227,46 +227,60 @@ test('a caller’s TRA is a breakend and DUP:TANDEM a duplication', () => {
   )
 })
 
-test('a link opens several loci as a split view and one as a linear view', () => {
-  const link = liveLink({
-    jbrowse: 'https://example.org/jb2/',
-    config: 'https://example.org/c.json',
+test('a deletion of two windows counts its split reads and its gapped reads', () => {
+  const [del] = buildCards({
+    vcfText: VCF,
+    sets: [
+      {
+        name: 'tumor_normal',
+        labels: ['tumor', 'normal'],
+        rows: parseManifest(
+          [
+            'file\tlocs\tname\tline\tevent\tlinks\talt\tstatus',
+            '2_del.png\tchr1:8400-9000 chr1:9100-9772\t\t9\t\t3,0\t4/56,0/59\tok',
+          ].join('\n'),
+        ),
+      },
+    ],
+  })
+  assert.deepEqual(del.lanes, [
+    { label: 'tumor', split: 3, alt: 4, depth: 56, reads: 7 },
+    { label: 'normal', split: 0, alt: 0, depth: 59, reads: 0 },
+  ])
+  assert.equal(del.support, 'sample')
+  assert.match(toTsv([del], {}), /tumor=3\+4\/56;normal=0\+0\/59/)
+})
+
+test('a link opens the view the manifest says the image was drawn in', () => {
+  const view = {
+    type: 'LinearGenomeView',
     assembly: 'hg38',
-    tracks: ['t', 'n'],
+    loc: 'chr1:1-2 chr1:300-400',
+    tracks: [{ trackId: 't', readConnections: 'arc', layoutOrder: 'split' }],
+  }
+  const rows = parseManifest(
+    [
+      'file\tlocs\tname\tline\tevent\tlinks\talt\tspec\tstatus',
+      `2_del.png\tchr1:1-2 chr1:300-400\t\t9\t\t3\t\t${JSON.stringify(view)}\tok`,
+      '3_ins.png\tchr1:4400-5600\tins1\t10\t\t\t\t\tfailed',
+    ].join('\n'),
+  )
+  const [del, ins] = buildCards({
+    vcfText: VCF,
+    sets: [{ name: 't', labels: ['t'], rows }],
+    link: liveLink({
+      jbrowse: 'https://example.org/jb2/',
+      config: 'https://example.org/c.json',
+    }),
   })
-  const spec = url =>
-    JSON.parse(decodeURIComponent(url.split('&session=spec-')[1]))
-  assert.deepEqual(spec(link(['chr1:1-2', 'chr5:3-4'])), {
-    views: [
-      {
-        type: 'BreakpointSplitView',
-        views: [
-          { loc: 'chr1:1-2', assembly: 'hg38', tracks: ['t', 'n'] },
-          { loc: 'chr5:3-4', assembly: 'hg38', tracks: ['t', 'n'] },
-        ],
-      },
-    ],
-  })
-  // two ends on one contig are one row, as the image draws them: the tracks'
-  // read arcs join the windows, split reads first
-  assert.deepEqual(spec(link(['chr1:1-2', 'chr1:300-400'])), {
-    views: [
-      {
-        type: 'LinearGenomeView',
-        loc: 'chr1:1-2 chr1:300-400',
-        assembly: 'hg38',
-        tracks: [
-          { trackId: 't', readConnections: 'arc', layoutOrder: 'split' },
-          { trackId: 'n', readConnections: 'arc', layoutOrder: 'split' },
-        ],
-      },
-    ],
-  })
-  assert.deepEqual(spec(link(['chr1:1-2'])), {
-    views: [
-      { type: 'LinearGenomeView', loc: 'chr1:1-2', assembly: 'hg38', tracks: ['t', 'n'] },
-    ],
-  })
+  const [address, spec] = del.url.split('&session=spec-')
+  assert.equal(
+    address,
+    'https://example.org/jb2/?config=https%3A%2F%2Fexample.org%2Fc.json',
+  )
+  assert.deepEqual(JSON.parse(decodeURIComponent(spec)), { views: [view] })
+  // a row that never rendered reported no view
+  assert.equal(ins.url, undefined)
 })
 
 test('the event filter keeps an event’s card beside its records', () => {
@@ -518,8 +532,8 @@ test('a structural variant’s card has no change: its HGVS is not one', () => {
 test('the reads with a one-panel record’s ALT are its lanes’ counts', () => {
   const [braf, del, ins, mnv] = small()
   assert.deepEqual(braf.lanes, [
-    { label: 'tumor', reads: 31, depth: 66 },
-    { label: 'normal', reads: 0, depth: 52 },
+    { label: 'tumor', alt: 31, depth: 66, reads: 31 },
+    { label: 'normal', alt: 0, depth: 52, reads: 0 },
   ])
   assert.deepEqual(
     [braf.support, del.support, ins.support, mnv.support],

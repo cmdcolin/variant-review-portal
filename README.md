@@ -11,9 +11,12 @@ real. The reads do, and a picture of them per call is a queue a person can
 finish.
 
 ```bash
-# every alignments track in one run, so each record is one image
+# every alignments track in one run, so each record is one image; genes, the
+# callset and repeats beside them say what a call hits and what it sits in
 jb2export batch --vcf calls.vcf.gz --config config.json --assembly hg38 \
-  --track tumor_reads --track normal_reads --outDir reads --manifest
+  --track genes height:50 --track calls height:50 \
+  --track tumor_reads height:150 --track normal_reads height:150 \
+  --track repeats height:50 --outDir reads --manifest
 
 # name the tracks in the images, in track order: the sample, then its controls
 variant-review-portal --vcf calls.vcf.gz \
@@ -58,27 +61,33 @@ React, react-dom and esbuild build the page, and
 [`@gmod/vcf`](https://www.npmjs.com/package/@gmod/vcf) reads the callset. The
 images come from [`@jbrowse/img`](https://www.npmjs.com/package/@jbrowse/img),
 which puts `jb2export` on your PATH; its manifest needs the `line` column, newer
-than 5.0.0-beta.8. Small variants and the one-panel count need a
-`jb2export` newer than 5.0.0-beta.13.
+than 5.0.0-beta.8. Small variants and the reads with a record's ALT need a
+`jb2export` newer than 5.0.0-beta.13, and a live link one whose manifest has the
+`spec` column.
 
 ## What a card holds
 
-- **One image, every track.** A record one window holds is a linear view of it.
-  Two ends on one chromosome, a deletion, duplication or inversion, are one row
-  too: both ends side by side under the arc of the reads joining them, split
-  reads on top. A junction between two chromosomes is a breakpoint split view,
-  one panel a locus. Each has the sample's reads above its control's. The image scales to the window so a whole card is on screen at once;
-  click it, or press <kbd>f</kbd>, for full size.
-- **Supporting reads, counted per track.** For a record of two loci,
-  `jb2export` reports the split reads joining them. For a record of one panel
-  (an SNV, an indel, a deletion or insertion short enough to fit) it sorts the
-  pileup at the variant and reports the reads with the ALT over the reads
-  covering it, the manifest's `alt` column. An insertion of 50 bases or more is
-  counted wherever in the image the aligner placed it. `--images tumor,normal=reads` names the tracks, and the support
-  filter sorts a callset three ways: no supporting read, supporting reads in a
-  control too, supporting reads in the sample only. One noisy base in one normal
-  read files a call under the second, so the groups order the queue and the
-  picture decides the card.
+- **One image, every track.** `jb2export` draws a chromosome a row. Loci on
+  one chromosome are a linear view: one window, or the two ends of a deletion,
+  duplication or inversion side by side under the arc of the reads joining
+  them. A junction between two chromosomes is a breakpoint split view, one
+  panel a chromosome, and an event's loci on one chromosome share its row. Each
+  has the sample's reads above its control's, split reads and reads carrying a
+  large deletion on top. Any other track of the run is in the image too: genes,
+  the callset itself, repeats. The image scales to the window so a whole card
+  is on screen at once; click it, or press <kbd>f</kbd>, for full size.
+- **Supporting reads, counted per track.** `jb2export` reports the split reads
+  joining an image's windows, and, where a record's ALT says what a read
+  carries (an SNV, an indel, a deletion or an insertion), the reads with the
+  ALT over the reads covering it. A deletion of two windows has both, printed
+  as `3 split + 4 gapped of 56 reads`: an aligner writes a deletion as a gap up
+  to a size and as two pieces past it. An insertion of 50 bases or more is
+  counted wherever in the image the aligner placed it.
+  `--images tumor,normal=reads` names the tracks, and the support filter sorts a
+  callset three ways: no supporting read, supporting reads in a control too,
+  supporting reads in the sample only. One noisy base in one normal read files
+  a call under the second, so the groups order the queue and the picture
+  decides the card.
 - **What the caller wrote.** The record's `SVTYPE`, size, `FILTER` and `QUAL`,
   its sample columns (`AF`, `AD`, `DP`, whatever the caller's `FORMAT` holds)
   and, under **VCF record**, every `INFO` key. Hover a key or a filter for the
@@ -94,8 +103,10 @@ than 5.0.0-beta.8. Small variants and the one-panel count need a
   event visiting more than two loci has a card of its own, every locus in one
   image. JBrowse reads the standard key;
   [Severus's `CLUSTERID` takes a rename](https://jbrowse.org/jb2/docs/user_guides/sv_inspector_view/#rearrangement-events).
-- **A link**, given `--jbrowse`, `--config`, `--assembly` and `--tracks`: the
-  card's loci in the view its image was drawn in.
+- **A link**, given `--jbrowse` and `--config`: the view the image was drawn
+  in, which the manifest's `spec` column holds, with the tracks `--track` named.
+  A track made from a file flag such as `--bam` is in no hosted config, so the
+  link leaves it out.
 
 Images rendered apart still work: repeat `--images`, one directory per run, and
 a card stacks them. The first directory's rows are the cards, and every other

@@ -75,9 +75,11 @@ function Lanes({ lanes }) {
           <b>{l.label}</b>
           {l.reads === undefined
             ? 'not counted'
-            : l.depth === undefined
-              ? `${plural(l.reads, 'split read')} joining the loci`
-              : `${l.reads} of ${plural(l.depth, 'read')} with the ALT`}
+            : l.alt === undefined
+              ? `${plural(l.split, 'split read')} joining the loci`
+              : l.split === undefined
+                ? `${l.alt} of ${plural(l.depth, 'read')} with the ALT`
+                : `${l.split} split + ${l.alt} gapped of ${plural(l.depth, 'read')}`}
         </span>
       ))
     : null
@@ -300,7 +302,7 @@ function Table({
             <th
               className="n"
               key={l}
-              title="Split reads joining the loci, or reads with the ALT of those covering it"
+              title="Split reads joining the loci, and reads with the ALT of those covering it"
             >
               {l}
             </th>

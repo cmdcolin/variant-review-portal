@@ -44,12 +44,11 @@ Options:
               as CLNSIG or SUBCLONAL; repeat or separate with commas. FILTER is
               one already when the callset has more than one
 
-  A link on every card, given all four:
+  A link on every card, given both. It opens the view the image was drawn in,
+  which the manifest's spec column holds:
   --jbrowse   URL of a JBrowse Web to open cards in
   --config    URL of the config the images were rendered from, as that JBrowse
               Web reaches it
-  --assembly  assembly name
-  --tracks    comma-separated trackIds to open
 `
 
 function fail(message) {
@@ -74,8 +73,6 @@ const { values } = parseArgs({
     facet: { type: 'string', multiple: true },
     jbrowse: { type: 'string' },
     config: { type: 'string' },
-    assembly: { type: 'string' },
-    tracks: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
 })
@@ -114,18 +111,17 @@ if (new Set(labels).size !== labels.length) {
   fail(`two tracks share the name "${labels.find((l, i) => labels.indexOf(l) !== i)}": name each with --images a,b=dir`)
 }
 
-const linkOpts = [values.jbrowse, values.config, values.assembly, values.tracks]
-if (linkOpts.some(Boolean) && !linkOpts.every(Boolean)) {
-  fail('a live link needs all of --jbrowse, --config, --assembly and --tracks')
+if (!values.jbrowse !== !values.config) {
+  fail('a live link needs both --jbrowse and --config')
 }
 const link = values.jbrowse
-  ? liveLink({
-      jbrowse: values.jbrowse,
-      config: values.config,
-      assembly: values.assembly,
-      tracks: values.tracks.split(','),
-    })
+  ? liveLink({ jbrowse: values.jbrowse, config: values.config })
   : undefined
+if (link && !sets[0].rows.some(r => r.spec)) {
+  fail(
+    `${path.join(sets[0].dir, 'manifest.tsv')} has no spec column to link from: it was written by a jb2export that predates it. Re-render with a current @jbrowse/img.`,
+  )
+}
 
 const vcfText = readMaybeGzip(vcf)
 let cards
