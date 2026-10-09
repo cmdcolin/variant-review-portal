@@ -140,6 +140,13 @@ if (format === 'cram' && !reference) {
   )
 }
 
+// samtools fills a CRAM slice to five million bases, and a reader decodes a
+// whole slice to draw one window of it. That is thousands of short reads and
+// a fair unit, or a few hundred long ones: over PacBio HiFi a cap of 250,000
+// rendered a callset in 43 s where the default took 100, for 115 MB against
+// 101, and a smaller cap bought no more time.
+const CRAM_BASES_PER_SLICE = 250_000
+
 // A range request that gets no answer is the caller's to retry, and a remote
 // BAM answers a few hundred of them here
 const TRIES = 5
@@ -154,7 +161,13 @@ for (const { trackId, url } of sources) {
       '-L',
       bedFile,
       ...(reference ? ['-T', local(reference)] : []),
-      format === 'cram' ? '-C' : '-b',
+      ...(format === 'cram'
+        ? [
+            '-C',
+            '--output-fmt-option',
+            `bases_per_slice=${CRAM_BASES_PER_SLICE}`,
+          ]
+        : ['-b']),
       '-o',
       file,
       local(url),

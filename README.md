@@ -142,8 +142,10 @@ where that file will be served. It needs `samtools` on the PATH, and a
 5.0.0-beta.13.
 
 The slices hold whole reads, so their size follows the read length more than the
-window: the HG008-T portal's 181 cards are 101 MB of PacBio HiFi, tumor and
-normal, beside 17 MB of images. Rendering from them took about three minutes, several
+window: the HG008-T portal's 181 cards are 115 MB of PacBio HiFi, tumor and
+normal, beside 17 MB of images. A CRAM is written in slices of 250,000 bases,
+a twentieth of `samtools`' default, because a reader decodes a whole slice to
+draw one window of it. Rendering from them took about three minutes, several
 times quicker than from the full files over the network. A link over slices shows reads at
 the cards' windows and nowhere else.
 [`examples/hg008/config.json`](examples/hg008/config.json) is the config that
