@@ -1,13 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "typescript",
-    "unicorn",
-    "oxc",
-    "import",
-    "react",
-    "node"
-  ],
+  "plugins": ["typescript", "unicorn", "oxc", "import", "react", "node"],
   "categories": {
     "correctness": "error",
     "suspicious": "error"
@@ -97,12 +90,7 @@
         "allowForKnownSafeCalls": [
           {
             "from": "package",
-            "name": [
-              "test",
-              "it",
-              "describe",
-              "suite"
-            ],
+            "name": ["test", "it", "describe", "suite"],
             "package": "node:test"
           }
         ]

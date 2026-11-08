@@ -121,7 +121,11 @@ test('one image of two tracks is one picture with a count for each track', () =>
   const [bnd, del] = buildCards({
     vcfText: VCF,
     sets: [
-      { name: 'tumor_normal', labels: ['tumor', 'normal'], rows: parseManifest(BOTH) },
+      {
+        name: 'tumor_normal',
+        labels: ['tumor', 'normal'],
+        rows: parseManifest(BOTH),
+      },
     ],
   })
   assert.deepEqual(
@@ -179,7 +183,9 @@ test('a manifest with no links column still builds cards, uncounted', () => {
       {
         name: 't',
         labels: ['t'],
-        rows: parseManifest(`${old}\n1_a.png\tchr3:1-2 chr10:3-4\ta\t8\tder3\tok`),
+        rows: parseManifest(
+          `${old}\n1_a.png\tchr3:1-2 chr10:3-4\ta\t8\tder3\tok`,
+        ),
       },
     ],
   })
@@ -215,17 +221,25 @@ test('a manifest rendered from another VCF is refused', () => {
     () =>
       buildCards({
         vcfText: VCF,
-        sets: [{ name: 't', labels: ['t'], rows: parseManifest(`${head}\nx.png\tchr1:1-2\t\t99\t\tok`) }],
+        sets: [
+          {
+            name: 't',
+            labels: ['t'],
+            rows: parseManifest(`${head}\nx.png\tchr1:1-2\t\t99\t\tok`),
+          },
+        ],
       }),
     /line 99 is not a record of this VCF/,
   )
 })
 
 test('a caller’s TRA is a breakend and DUP:TANDEM a duplication', () => {
-  assert.deepEqual(
-    ['TRA', 'DUP:TANDEM', 'CPX', undefined].map(svClass),
-    ['BND', 'DUP', 'OTHER', 'OTHER'],
-  )
+  assert.deepEqual(['TRA', 'DUP:TANDEM', 'CPX', undefined].map(svClass), [
+    'BND',
+    'DUP',
+    'OTHER',
+    'OTHER',
+  ])
 })
 
 test('a deletion of two windows counts its split reads and its gapped reads', () => {
@@ -286,7 +300,13 @@ test('a link opens the view the manifest says the image was drawn in', () => {
 
 test('the event filter keeps an event’s card beside its records', () => {
   const all = cards()
-  const filter = { cls: 'all', event: 'der3', verdictFilter: 'all', q: '', verdicts: {} }
+  const filter = {
+    cls: 'all',
+    event: 'der3',
+    verdictFilter: 'all',
+    q: '',
+    verdicts: {},
+  }
   assert.deepEqual(
     all.filter(c => matches(c, filter)).map(c => c.id),
     ['8', 'event:der3'],
@@ -304,10 +324,12 @@ test('verdicts round-trip through the exported TSV', () => {
 })
 
 test('sizes read in the unit a reviewer says them in', () => {
-  assert.deepEqual(
-    [172, 6430, 4_500_000, undefined].map(sizeLabel),
-    ['172 bp', '6.4 kb', '4.5 Mb', ''],
-  )
+  assert.deepEqual([172, 6430, 4_500_000, undefined].map(sizeLabel), [
+    '172 bp',
+    '6.4 kb',
+    '4.5 Mb',
+    '',
+  ])
 })
 
 const ANNOTATED = [
@@ -365,19 +387,25 @@ test('a card carries its sample columns and its INFO, long values clipped', () =
 
 test('the header’s descriptions come with the keys the cards print', () => {
   const described = describeKeys(ANNOTATED, annotated())
-  assert.equal(described.FILTER.Too_low_VAF, 'Allele fraction inferred to be low')
+  assert.equal(
+    described.FILTER.Too_low_VAF,
+    'Allele fraction inferred to be low',
+  )
   assert.equal(described.FORMAT.NAF, 'Allele frequency in the normal BAM')
   assert.equal(described.INFO.SVLEN, 'Length difference')
 })
 
 test('search takes every word, across genes, effects and loci', () => {
   const all = annotated()
-  const found = q => all.filter(c => matches(c, { q, verdicts: {} })).map(c => c.title)
+  const found = q =>
+    all.filter(c => matches(c, { q, verdicts: {} })).map(c => c.title)
   assert.deepEqual(found('uck2 fusion'), ['fus'])
   assert.deepEqual(found('chr2'), ['ins'])
   assert.deepEqual(found('uck2 chr2'), [])
   assert.deepEqual(
-    all.filter(c => matches(c, { impact: 'HIGH', verdicts: {} })).map(c => c.title),
+    all
+      .filter(c => matches(c, { impact: 'HIGH', verdicts: {} }))
+      .map(c => c.title),
     ['fus'],
   )
 })
@@ -397,7 +425,12 @@ test('a callset sorts on any number its cards carry, the rest last', () => {
 
 test('the address carries what differs from a fresh page, and reads back', () => {
   assert.equal(toHash({}), '')
-  const hash = toHash({ cls: 'DEL', q: 'chr1 fusion', sort: 'size', card: '12' })
+  const hash = toHash({
+    cls: 'DEL',
+    q: 'chr1 fusion',
+    sort: 'size',
+    card: '12',
+  })
   assert.equal(hash, '#cls=DEL&q=chr1+fusion&sort=size&card=12')
   const back = fromHash(hash)
   assert.deepEqual(
@@ -408,9 +441,15 @@ test('the address carries what differs from a fresh page, and reads back', () =>
 
 test('a note travels with its verdict through export and import', () => {
   const all = annotated()
-  const tsv = toTsv(all, { 10: 'real' }, { 10: 'clean\tfan', 11: 'homopolymer' })
+  const tsv = toTsv(
+    all,
+    { 10: 'real' },
+    { 10: 'clean\tfan', 11: 'homopolymer' },
+  )
   const [headRow, first] = tsv.split('\n')
-  assert.ok(headRow.endsWith('change\tsupporting_reads\tsupport\tverdict\tnote'))
+  assert.ok(
+    headRow.endsWith('change\tsupporting_reads\tsupport\tverdict\tnote'),
+  )
   assert.ok(first.endsWith('NUP93,UCK2\tHIGH\t\tt=4\tsample\treal\tclean fan'))
   const back = fromTsv(tsv, all)
   assert.deepEqual(back.changes, { 10: 'real', 11: null })
@@ -523,7 +562,9 @@ test('a structural variant’s card has no change: its HGVS is not one', () => {
       {
         name: 't',
         labels: ['t'],
-        rows: parseManifest(`${head}\n1.png\tchr1:1-200 chr16:400-600\tfus\t5\t\t4\tok`),
+        rows: parseManifest(
+          `${head}\n1.png\tchr1:1-200 chr16:400-600\tfus\t5\t\t4\tok`,
+        ),
       },
     ],
   })
@@ -544,7 +585,10 @@ test('the reads with a one-panel record’s ALT are its lanes’ counts', () => 
     sortCards(small(), 'control').map(c => c.id),
     ['8', '7', '9', '10'],
   )
-  assert.match(toTsv([braf], {}), /\tp\.Val640Glu\ttumor=31\/66;normal=0\/52\tsample\t/)
+  assert.match(
+    toTsv([braf], {}),
+    /\tp\.Val640Glu\ttumor=31\/66;normal=0\/52\tsample\t/,
+  )
 })
 
 test('a facet is an INFO key or FILTER on the card, a filter, and part of the address', () => {
@@ -558,9 +602,14 @@ test('a facet is an INFO key or FILTER on the card, a filter, and part of the ad
   const kept = filter =>
     all.filter(c => matches(c, { ...filter, verdicts: {} })).map(c => c.id)
   assert.deepEqual(kept({ 'facet:FILTER': 'LowQual' }), ['8'])
-  assert.deepEqual(kept({ 'facet:CLNSIG': 'Pathogenic/Likely_pathogenic' }), ['7'])
+  assert.deepEqual(kept({ 'facet:CLNSIG': 'Pathogenic/Likely_pathogenic' }), [
+    '7',
+  ])
   assert.deepEqual(kept({ 'facet:CLNSIG': 'all', q: 'val640glu' }), ['7'])
-  const hash = toHash({ 'facet:CLNSIG': 'Pathogenic/Likely_pathogenic', 'facet:H': 'all' })
+  const hash = toHash({
+    'facet:CLNSIG': 'Pathogenic/Likely_pathogenic',
+    'facet:H': 'all',
+  })
   assert.equal(hash, '#facet%3ACLNSIG=Pathogenic%2FLikely_pathogenic')
   assert.equal(fromHash(hash)['facet:CLNSIG'], 'Pathogenic/Likely_pathogenic')
 })

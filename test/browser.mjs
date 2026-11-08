@@ -82,8 +82,14 @@ try {
 
   assert.equal(await count('.card'), 3)
   assert.equal(await count('.card img.shot'), 3)
-  assert.match(await text('.card[data-cls="EVENT"] .meta'), /1 record · 10 loci/)
-  assert.match(await text('.card .evidence'), /tumor4 split reads.*normal1 split read /)
+  assert.match(
+    await text('.card[data-cls="EVENT"] .meta'),
+    /1 record · 10 loci/,
+  )
+  assert.match(
+    await text('.card .evidence'),
+    /tumor4 split reads.*normal1 split read /,
+  )
   assert.equal(await count('header select[data-facet]'), 0)
 
   await page.keyboard.press('j')
@@ -100,7 +106,10 @@ try {
 
   await page.reload({ waitUntil: 'networkidle0' })
   assert.equal(await count('.card'), 1)
-  assert.equal(await page.$eval('.card input.note', el => el.value), 'clean fan')
+  assert.equal(
+    await page.$eval('.card input.note', el => el.value),
+    'clean fan',
+  )
   assert.equal(
     await page.$eval('.card', el => el.dataset.verdict + el.dataset.current),
     'realtrue',
@@ -108,7 +117,10 @@ try {
 
   await page.keyboard.press('t')
   assert.ok(
-    await page.$eval('.index', el => el.getBoundingClientRect().right <= innerWidth),
+    await page.$eval(
+      '.index',
+      el => el.getBoundingClientRect().right <= innerWidth,
+    ),
     'the table fits the window',
   )
   assert.equal(await count('.index tbody tr'), 1)

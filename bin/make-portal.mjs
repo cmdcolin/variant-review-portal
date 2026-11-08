@@ -108,7 +108,9 @@ const sets = images.map(arg => {
 })
 const labels = sets.flatMap(s => s.labels)
 if (new Set(labels).size !== labels.length) {
-  fail(`two tracks share the name "${labels.find((l, i) => labels.indexOf(l) !== i)}": name each with --images a,b=dir`)
+  fail(
+    `two tracks share the name "${labels.find((l, i) => labels.indexOf(l) !== i)}": name each with --images a,b=dir`,
+  )
 }
 
 if (!values.jbrowse !== !values.config) {
@@ -194,7 +196,11 @@ const events = cards.length - records
 const data = {
   // verdicts are stored under this, so a portal rebuilt from the same callset
   // keeps its review and one built from another never inherits it
-  portalId: crypto.createHash('sha256').update(vcfText).digest('hex').slice(0, 12),
+  portalId: crypto
+    .createHash('sha256')
+    .update(vcfText)
+    .digest('hex')
+    .slice(0, 12),
   title,
   eyebrow: `${records} record${records === 1 ? '' : 's'}${
     events ? `, ${events} event${events === 1 ? '' : 's'}` : ''
@@ -207,5 +213,8 @@ const data = {
   footer: `Images by jb2export batch. Verdicts stay in this browser until exported.`,
 }
 fs.mkdirSync(out, { recursive: true })
-fs.writeFileSync(path.join(out, 'index.html'), await renderPage({ data, title }))
+fs.writeFileSync(
+  path.join(out, 'index.html'),
+  await renderPage({ data, title }),
+)
 console.log(`wrote ${cards.length} cards to ${path.join(out, 'index.html')}`)

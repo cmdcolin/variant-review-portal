@@ -604,7 +604,10 @@ export function App({ data }) {
       }
       const t = e.target
       if (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) {
-        if (e.key === 'Escape' || (e.key === 'Enter' && t.tagName === 'INPUT')) {
+        if (
+          e.key === 'Escape' ||
+          (e.key === 'Enter' && t.tagName === 'INPUT')
+        ) {
           t.blur()
         }
         return
@@ -779,9 +782,10 @@ export function App({ data }) {
 
   const impacts = useMemo(
     () =>
-      IMPACTS.map(k => [k, data.cards.filter(c => c.impact === k).length]).filter(
-        ([, n]) => n,
-      ),
+      IMPACTS.map(k => [
+        k,
+        data.cards.filter(c => c.impact === k).length,
+      ]).filter(([, n]) => n),
     [data.cards],
   )
 
@@ -814,9 +818,9 @@ export function App({ data }) {
               {done} of {data.cards.length} judged
             </span>
             <span id="tally">
-              {VERDICTS.map(b => `${counts[b.v]} ${b.label.toLowerCase()}`).join(
-                ' · ',
-              )}
+              {VERDICTS.map(
+                b => `${counts[b.v]} ${b.label.toLowerCase()}`,
+              ).join(' · ')}
             </span>
           </div>
           <div className="bar">

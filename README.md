@@ -67,27 +67,26 @@ than 5.0.0-beta.8. Small variants and the reads with a record's ALT need a
 
 ## What a card holds
 
-- **One image, every track.** `jb2export` draws a chromosome a row. Loci on
-  one chromosome are a linear view: one window, or the two ends of a deletion,
-  duplication or inversion side by side under the arc of the reads joining
-  them. A junction between two chromosomes is a breakpoint split view, one
-  panel a chromosome, and an event's loci on one chromosome share its row. Each
-  has the sample's reads above its control's, split reads and reads carrying a
-  large deletion on top. Any other track of the run is in the image too: genes,
-  the callset itself, repeats. The image scales to the window so a whole card
-  is on screen at once; click it, or press <kbd>f</kbd>, for full size.
+- **One image, every track.** `jb2export` draws a chromosome a row. Loci on one
+  chromosome are a linear view: one window, or the two ends of a deletion,
+  duplication or inversion side by side under the arc of the reads joining them.
+  A junction between two chromosomes is a breakpoint split view, one panel a
+  chromosome, and an event's loci on one chromosome share its row. Each has the
+  sample's reads above its control's, split reads and reads carrying a large
+  deletion on top. Any other track of the run is in the image too: genes, the
+  callset itself, repeats. The image scales to the window so a whole card is on
+  screen at once; click it, or press <kbd>f</kbd>, for full size.
 - **Supporting reads, counted per track.** `jb2export` reports the split reads
-  joining an image's windows, and, where a record's ALT says what a read
-  carries (an SNV, an indel, a deletion or an insertion), the reads with the
-  ALT over the reads covering it. A deletion of two windows has both, printed
-  as `3 split + 4 gapped of 56 reads`: an aligner writes a deletion as a gap up
-  to a size and as two pieces past it. An insertion of 50 bases or more is
-  counted wherever in the image the aligner placed it.
-  `--images tumor,normal=reads` names the tracks, and the support filter sorts a
-  callset three ways: no supporting read, supporting reads in a control too,
-  supporting reads in the sample only. One noisy base in one normal read files
-  a call under the second, so the groups order the queue and the picture
-  decides the card.
+  joining an image's windows, and, where a record's ALT says what a read carries
+  (an SNV, an indel, a deletion or an insertion), the reads with the ALT over
+  the reads covering it. A deletion of two windows has both, printed as
+  `3 split + 4 gapped of 56 reads`: an aligner writes a deletion as a gap up to
+  a size and as two pieces past it. An insertion of 50 bases or more is counted
+  wherever in the image the aligner placed it. `--images tumor,normal=reads`
+  names the tracks, and the support filter sorts a callset three ways: no
+  supporting read, supporting reads in a control too, supporting reads in the
+  sample only. One noisy base in one normal read files a call under the second,
+  so the groups order the queue and the picture decides the card.
 - **What the caller wrote.** The record's `SVTYPE`, size, `FILTER` and `QUAL`,
   its sample columns (`AF`, `AD`, `DP`, whatever the caller's `FORMAT` holds)
   and, under **VCF record**, every `INFO` key. Hover a key or a filter for the
@@ -103,11 +102,11 @@ than 5.0.0-beta.8. Small variants and the reads with a record's ALT need a
   event visiting more than two loci has a card of its own, every locus in one
   image. JBrowse reads the standard key;
   [Severus's `CLUSTERID` takes a rename](https://jbrowse.org/jb2/docs/user_guides/sv_inspector_view/#rearrangement-events).
-- **A link**, given `--jbrowse` and `--config`: the view the image was drawn
-  in, which the manifest's `spec` column holds, with the tracks `--track` named.
-  A track made from a file flag such as `--bam` is in no hosted config, so the
-  link leaves it out. [Carrying the reads](#carrying-the-reads) puts them in
-  the portal itself.
+- **A link**, given `--jbrowse` and `--config`: the view the image was drawn in,
+  which the manifest's `spec` column holds, with the tracks `--track` named. A
+  track made from a file flag such as `--bam` is in no hosted config, so the
+  link leaves it out. [Carrying the reads](#carrying-the-reads) puts them in the
+  portal itself.
 
 Images rendered apart still work: repeat `--images`, one directory per run, and
 a card stacks them. The first directory's rows are the cards, and every other
@@ -143,11 +142,11 @@ where that file will be served. It needs `samtools` on the PATH, and a
 
 The slices hold whole reads, so their size follows the read length more than the
 window: the HG008-T portal's 181 cards are 115 MB of PacBio HiFi, tumor and
-normal, beside 17 MB of images. A CRAM is written in slices of 250,000 bases,
-a twentieth of `samtools`' default, because a reader decodes a whole slice to
-draw one window of it. Rendering from them took about three minutes, several
-times quicker than from the full files over the network. A link over slices shows reads at
-the cards' windows and nowhere else.
+normal, beside 17 MB of images. A CRAM is written in slices of 250,000 bases, a
+twentieth of `samtools`' default, because a reader decodes a whole slice to draw
+one window of it. Rendering from them took about three minutes, several times
+quicker than from the full files over the network. A link over slices shows
+reads at the cards' windows and nowhere else.
 [`examples/hg008/config.json`](examples/hg008/config.json) is the config that
 portal was sliced from.
 
@@ -166,11 +165,11 @@ whole deployment.
 
 ## Reviewing
 
-The queue takes the keyboard: <kbd>j</kbd> and <kbd>k</kbd> move,
-<kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> are real / needs a look / artifact on the
-card under the cursor, <kbd>n</kbd> writes a note on it, <kbd>o</kbd> opens it
-in JBrowse and <kbd>/</kbd> jumps to the search box. The same digit twice takes
-a verdict back off.
+The queue takes the keyboard: <kbd>j</kbd> and <kbd>k</kbd> move, <kbd>1</kbd>
+<kbd>2</kbd> <kbd>3</kbd> are real / needs a look / artifact on the card under
+the cursor, <kbd>n</kbd> writes a note on it, <kbd>o</kbd> opens it in JBrowse
+and <kbd>/</kbd> jumps to the search box. The same digit twice takes a verdict
+back off.
 
 <kbd>t</kbd> swaps the cards for the table, where the same keys judge a row and
 <kbd>Enter</kbd> opens its card. The order select sorts either by size, by split
@@ -183,9 +182,9 @@ The address bar follows the filters, the order and the card under the cursor, so
 copying it is a link to that card in that queue.
 
 Verdicts and notes live in the reviewer's browser. **Export** writes them as TSV
-beside each record's line, id, coordinates, genes and supporting-read counts, and
-**Import** reads that TSV back, so a second reviewer or a cleared browser does
-not start the review again.
+beside each record's line, id, coordinates, genes and supporting-read counts,
+and **Import** reads that TSV back, so a second reviewer or a cleared browser
+does not start the review again.
 
 ## Test
 

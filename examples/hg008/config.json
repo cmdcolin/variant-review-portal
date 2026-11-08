@@ -34,12 +34,8 @@
       "type": "FeatureTrack",
       "trackId": "hg38_ncbiRefSeq_ucsc",
       "name": "NCBI RefSeq genes (hg38)",
-      "category": [
-        "Genes"
-      ],
-      "assemblyNames": [
-        "GRCh38_GIABv3"
-      ],
+      "category": ["Genes"],
+      "assemblyNames": ["GRCh38_GIABv3"],
       "adapter": {
         "type": "Gff3TabixAdapter",
         "gffGzLocation": {
@@ -59,12 +55,8 @@
       "type": "VariantTrack",
       "trackId": "hg008t_benchmark_sv",
       "name": "HG008-T V0.5 draft benchmark somatic SVs",
-      "category": [
-        "Variant calls"
-      ],
-      "assemblyNames": [
-        "GRCh38_GIABv3"
-      ],
+      "category": ["Variant calls"],
+      "assemblyNames": ["GRCh38_GIABv3"],
       "adapter": {
         "type": "VcfTabixAdapter",
         "vcfGzLocation": {
@@ -84,9 +76,7 @@
       "type": "AlignmentsTrack",
       "trackId": "hg008_tumor_hifi",
       "name": "HG008-T tumor (PacBio HiFi, 116x)",
-      "assemblyNames": [
-        "GRCh38_GIABv3"
-      ],
+      "assemblyNames": ["GRCh38_GIABv3"],
       "adapter": {
         "type": "BamAdapter",
         "bamLocation": {
@@ -105,9 +95,7 @@
       "type": "AlignmentsTrack",
       "trackId": "hg008_normal_hifi",
       "name": "HG008-N-P matched normal (PacBio HiFi, 35x)",
-      "assemblyNames": [
-        "GRCh38_GIABv3"
-      ],
+      "assemblyNames": ["GRCh38_GIABv3"],
       "adapter": {
         "type": "BamAdapter",
         "bamLocation": {
@@ -126,9 +114,7 @@
       "type": "FeatureTrack",
       "trackId": "repeats_hg38",
       "name": "Repeats",
-      "assemblyNames": [
-        "GRCh38_GIABv3"
-      ],
+      "assemblyNames": ["GRCh38_GIABv3"],
       "adapter": {
         "type": "BigBedAdapter",
         "bigBedLocation": {

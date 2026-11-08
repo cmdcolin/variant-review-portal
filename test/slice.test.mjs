@@ -20,20 +20,29 @@ const CONFIG = {
         },
       },
     },
-    { name: 'mm39', sequence: { adapter: { type: 'TwoBitAdapter', uri: 'mm39.2bit' } } },
+    {
+      name: 'mm39',
+      sequence: { adapter: { type: 'TwoBitAdapter', uri: 'mm39.2bit' } },
+    },
   ],
   tracks: [
     {
       trackId: 'tumor',
       assemblyNames: ['hg38'],
-      adapter: { type: 'BamAdapter', bamLocation: { uri: 'https://example.org/t.bam' } },
+      adapter: {
+        type: 'BamAdapter',
+        bamLocation: { uri: 'https://example.org/t.bam' },
+      },
     },
     {
       trackId: 'normal',
       assemblyNames: ['hg38'],
       adapter: { type: 'CramAdapter', uri: 'n.cram' },
     },
-    { trackId: 'genes', adapter: { type: 'Gff3TabixAdapter', uri: 'genes.gff.gz' } },
+    {
+      trackId: 'genes',
+      adapter: { type: 'Gff3TabixAdapter', uri: 'genes.gff.gz' },
+    },
   ],
 }
 
@@ -52,7 +61,10 @@ test('the windows of a dry run are a sorted BED, overlaps merged', () => {
 })
 
 test('a relative uri resolves against where the config was read', () => {
-  const { tracks, assemblies } = absolutize(CONFIG, 'https://example.org/demo/config.json')
+  const { tracks, assemblies } = absolutize(
+    CONFIG,
+    'https://example.org/demo/config.json',
+  )
   assert.deepEqual(
     [
       tracks[0].adapter.bamLocation.uri,
@@ -69,11 +81,18 @@ test('a relative uri resolves against where the config was read', () => {
 
 test('a track to slice is a BAM or CRAM the config can name', () => {
   assert.deepEqual(readSources(CONFIG, ['tumor', 'normal']), [
-    { trackId: 'tumor', url: 'https://example.org/t.bam', assemblyName: 'hg38' },
+    {
+      trackId: 'tumor',
+      url: 'https://example.org/t.bam',
+      assemblyName: 'hg38',
+    },
     { trackId: 'normal', url: 'n.cram', assemblyName: 'hg38' },
   ])
   assert.throws(() => readSources(CONFIG, ['reads']), /no track "reads"/)
-  assert.throws(() => readSources(CONFIG, ['genes']), /"genes" is not a BAM or CRAM/)
+  assert.throws(
+    () => readSources(CONFIG, ['genes']),
+    /"genes" is not a BAM or CRAM/,
+  )
 })
 
 test('CRAM needs a FASTA samtools can read', () => {
@@ -92,6 +111,8 @@ test('the sliced config reads each named track beside itself and leaves the rest
   assert.deepEqual(sliceConfig(CONFIG, ['tumor'], 'bam').tracks[0].adapter, {
     type: 'BamAdapter',
     bamLocation: { uri: 'reads/tumor.bam', locationType: 'UriLocation' },
-    index: { location: { uri: 'reads/tumor.bam.bai', locationType: 'UriLocation' } },
+    index: {
+      location: { uri: 'reads/tumor.bam.bai', locationType: 'UriLocation' },
+    },
   })
 })

@@ -189,9 +189,7 @@ for (const { trackId, url } of sources) {
   if (index.status !== 0) {
     fail(`samtools index ${file} failed:\n${index.stderr}`)
   }
-  console.log(
-    `${file}  ${(fs.statSync(file).size / 1e6).toFixed(1)} MB`,
-  )
+  console.log(`${file}  ${(fs.statSync(file).size / 1e6).toFixed(1)} MB`)
 }
 
 fs.writeFileSync(
