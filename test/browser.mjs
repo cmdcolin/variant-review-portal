@@ -9,7 +9,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import puppeteer from 'puppeteer'
+import { launch } from 'puppeteer'
 
 // as many loci as HG008-T's widest event, which is what a table has to wrap
 const EVENT_LOCI = Array.from(
@@ -62,7 +62,7 @@ execFileSync(process.execPath, [
   out,
 ])
 
-const browser = await puppeteer.launch({
+const browser = await launch({
   executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
   args: ['--no-sandbox', '--allow-file-access-from-files'],
 })

@@ -153,8 +153,9 @@ test('an image counting more tracks than --images names is refused', () => {
   )
 })
 
+const lane = reads => ({ reads })
+
 test('the counts on a card’s lanes say how far the reads support it', () => {
-  const lane = reads => ({ reads })
   assert.deepEqual(
     [
       supportOf([lane(0), lane(0)]),
@@ -452,7 +453,7 @@ const SMALL = [
 ].join('\n')
 
 function small() {
-  const head = 'file\tlocs\tname\tline\tevent\tlinks\talt\tstatus'
+  const altHead = 'file\tlocs\tname\tline\tevent\tlinks\talt\tstatus'
   return buildCards({
     vcfText: SMALL,
     facets: ['FILTER', 'CLNSIG', 'H'],
@@ -462,7 +463,7 @@ function small() {
         labels: ['tumor', 'normal'],
         rows: parseManifest(
           [
-            head,
+            altHead,
             '1.png\tchr7:140753261-140753411\t13961\t7\t\t\t31/66,0/52\tok',
             '2.png\tchr1:425-578\t\t8\t\t\t4/30,3/28\tok',
             '3.png\tchr1:825-975\t\t9\t\t\t0/30,0/28\tok',

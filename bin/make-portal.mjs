@@ -171,20 +171,20 @@ for (const card of cards) {
 // (an inserted sequence, a free-text field) is a search box, not a select.
 const FACET_VALUES_MAX = 40
 
-function facetOptions(cards) {
-  const values = new Map()
-  for (const card of cards) {
+function facetOptions(cardList) {
+  const byKey = new Map()
+  for (const card of cardList) {
     for (const [key, value] of Object.entries(card.facets)) {
-      const counts = values.get(key) ?? new Map()
+      const counts = byKey.get(key) ?? new Map()
       counts.set(value, (counts.get(value) ?? 0) + 1)
-      values.set(key, counts)
+      byKey.set(key, counts)
     }
   }
-  return [...values]
+  return [...byKey]
     .filter(([, counts]) => counts.size > 1 && counts.size <= FACET_VALUES_MAX)
     .map(([key, counts]) => ({
       key,
-      values: [...counts].sort(([, a], [, b]) => b - a),
+      values: [...counts].toSorted(([, a], [, b]) => b - a),
     }))
 }
 

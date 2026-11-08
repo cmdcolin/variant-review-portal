@@ -37,7 +37,7 @@ function facts(card) {
     return [plural(card.members, 'record'), `${card.locs.length} loci`]
   }
   return [
-    card.svtype || card.alleles,
+    card.svtype === '' ? card.alleles : card.svtype,
     sizeLabel(card.size),
     card.qual === undefined ? '' : `QUAL ${card.qual}`,
     card.eventType,
@@ -319,7 +319,7 @@ function Table({
       </thead>
       <tbody>
         {cards.map(card => {
-          const verdict = verdicts[card.id] || ''
+          const verdict = verdicts[card.id] ?? ''
           return (
             <tr
               key={card.id}
@@ -373,7 +373,7 @@ function Table({
               </td>
               <td className="n">{sizeLabel(card.size)}</td>
               {lanes.map(l => {
-                const lane = card.lanes.find(lane => lane.label === l)
+                const lane = card.lanes.find(x => x.label === l)
                 return (
                   <td className="n" key={l} data-zero={!lane?.reads}>
                     {lane ? laneCount(lane) : ''}
@@ -423,7 +423,7 @@ export function App({ data }) {
   useEffect(() => {
     try {
       const saved = JSON.parse(
-        localStorage.getItem(storageKey(data.portalId)) || '{}',
+        localStorage.getItem(storageKey(data.portalId)) ?? '{}',
       )
       setVerdicts(saved.verdicts ?? {})
       setNotes(saved.notes ?? {})
@@ -432,10 +432,15 @@ export function App({ data }) {
     } catch {
       /* private window, or site data blocked */
     }
-    const { sort, view, card, ...filter } = fromHash(location.hash)
-    setFilter(filter)
-    setSort(sort)
-    setView(view === 'table' ? 'table' : 'cards')
+    const {
+      sort: hashSort,
+      view: hashView,
+      card,
+      ...hashFilter
+    } = fromHash(location.hash)
+    setFilter(hashFilter)
+    setSort(hashSort)
+    setView(hashView === 'table' ? 'table' : 'cards')
     if (card) {
       wantScroll.current = true
       setCursor(card)
@@ -701,8 +706,11 @@ export function App({ data }) {
 
   function importTsv(file) {
     const reader = new FileReader()
-    reader.onload = () => {
-      const res = fromTsv(String(reader.result), data.cards)
+    reader.addEventListener('load', () => {
+      const res = fromTsv(
+        typeof reader.result === 'string' ? reader.result : '',
+        data.cards,
+      )
       if (res.error) {
         say(res.error)
         return
@@ -734,14 +742,14 @@ export function App({ data }) {
             : ''
         }.`,
       )
-    }
+    })
     reader.readAsText(file)
   }
 
   const clsCounts = useMemo(() => {
     const out = {}
     for (const c of data.cards) {
-      out[c.cls] = (out[c.cls] || 0) + 1
+      out[c.cls] = (out[c.cls] ?? 0) + 1
     }
     return out
   }, [data.cards])
@@ -754,7 +762,7 @@ export function App({ data }) {
 
   const events = useMemo(
     () =>
-      [...new Set(data.cards.filter(c => c.event).map(c => c.event))].sort(
+      [...new Set(data.cards.filter(c => c.event).map(c => c.event))].toSorted(
         (a, b) => a.localeCompare(b, undefined, { numeric: true }),
       ),
     [data.cards],
@@ -1101,7 +1109,7 @@ export function App({ data }) {
                 card={c}
                 label={data.classes[c.cls]}
                 describe={data.describe}
-                verdict={verdicts[c.id] || ''}
+                verdict={verdicts[c.id] ?? ''}
                 note={notes[c.id] ?? ''}
                 current={c.id === cursor}
                 onVerdict={setVerdict}

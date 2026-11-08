@@ -97,9 +97,12 @@ if (values.format && !['cram', 'bam'].includes(values.format)) {
 const isUrl = /^https?:\/\//.test(configArg)
 const base = isUrl ? configArg : pathToFileURL(path.resolve(configArg)).href
 const text = isUrl
-  ? await fetch(configArg).then(r =>
-      r.ok ? r.text() : fail(`${configArg} answered HTTP ${r.status}`),
-    )
+  ? await fetch(configArg).then(r => {
+      if (!r.ok) {
+        fail(`${configArg} answered HTTP ${r.status}`)
+      }
+      return r.text()
+    })
   : fs.readFileSync(configArg, 'utf8')
 const config = absolutize(JSON.parse(text), base)
 const trackIds = tracks.split(',').filter(Boolean)
