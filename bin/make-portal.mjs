@@ -26,7 +26,7 @@ call, a verdict and a link that opens the same loci live.
 
 Render the images first, every alignments track in one run:
 
-  jb2export batch --vcf calls.vcf.gz --config config.json --assembly hg38 \\
+  jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \\
     --track tumor_reads --track normal_reads --outDir reads --manifest
 
   variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads --out portal

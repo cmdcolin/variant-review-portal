@@ -13,7 +13,7 @@ finish.
 ```bash
 # every alignments track in one run, so each record is one image; genes, the
 # callset and repeats beside them say what a call hits and what it sits in
-jb2export batch --vcf calls.vcf.gz --config config.json --assembly hg38 \
+jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \
   --track genes height:50 --track calls height:50 \
   --track tumor_reads height:150 --track normal_reads height:150 \
   --track repeats height:50 --outDir reads --manifest
@@ -133,7 +133,7 @@ variant-review-slice --vcf calls.vcf.gz --config config.json \
   --tracks tumor_reads,normal_reads --out portal
 
 # render from the slices, which are local, then build into the same directory
-jb2export batch --vcf calls.vcf.gz --config portal/config.json --assembly hg38 \
+jb2export batch --sites calls.vcf.gz --config portal/config.json --assembly hg38 \
   --track tumor_reads --track normal_reads --outDir reads --manifest
 
 variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads --out portal \

@@ -30,7 +30,7 @@ itself:
   variant-review-slice --vcf calls.vcf.gz --config config.json \\
     --tracks tumor_reads,normal_reads --out portal
 
-  jb2export batch --vcf calls.vcf.gz --config portal/config.json --assembly hg38 \\
+  jb2export batch --sites calls.vcf.gz --config portal/config.json --assembly hg38 \\
     --track tumor_reads --track normal_reads --outDir reads --manifest
 
   variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads --out portal \\
@@ -116,7 +116,7 @@ try {
 
 const dryRun = run('jb2export', [
   'batch',
-  '--vcf',
+  '--sites',
   vcf,
   '--dryRun',
   ...(values.flank ? ['--flank', values.flank] : []),
