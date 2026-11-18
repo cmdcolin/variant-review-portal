@@ -13,6 +13,7 @@ import {
   CLASSES,
   liveLink,
   parseManifest,
+  parseSupport,
   SUPPORT,
 } from '../lib/cards.mjs'
 import { renderPage } from '../lib/page.mjs'
@@ -40,6 +41,11 @@ Options:
               first directory's rows are the cards
   --out       directory to write the portal to
   --title     page heading (default: the VCF's file name)
+  --support   the FORMAT keys the caller counts supporting reads under, the
+              sample's first and its controls' after, to group the queue on
+              instead of the reads jb2export counted: AD,NAD for nanomonsv,
+              TUMOR:DV,NORMAL:DV for a two-sample Sniffles VCF. A key alone
+              reads the first sample column
   --facet     an INFO key to print on every card and filter the queue on, such
               as CLNSIG or SUBCLONAL; repeat or separate with commas. FILTER is
               one already when the callset has more than one
@@ -71,6 +77,7 @@ const { values } = parseArgs({
     out: { type: 'string' },
     title: { type: 'string' },
     facet: { type: 'string', multiple: true },
+    support: { type: 'string' },
     jbrowse: { type: 'string' },
     config: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
@@ -132,6 +139,7 @@ try {
     vcfText,
     sets,
     link,
+    support: parseSupport(values.support ?? ''),
     facets: [
       'FILTER',
       ...(values.facet ?? []).flatMap(f => f.split(',')).filter(Boolean),
@@ -207,6 +215,9 @@ const data = {
   } · ${labels.join(' and ')}`,
   classes: CLASSES,
   support: SUPPORT,
+  supportFrom: values.support
+    ? `the caller's ${values.support.replaceAll(',', ', ')}`
+    : 'the reads jb2export counted',
   facets: facetOptions(cards),
   describe: describeKeys(vcfText, cards),
   cards,

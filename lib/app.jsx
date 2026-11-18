@@ -951,6 +951,7 @@ export function App({ data }) {
             <select
               id="sf"
               aria-label="Filter by read support"
+              title={`Grouped on ${data.supportFrom}`}
               value={filter.support}
               onChange={e => {
                 patchFilter({ support: e.target.value })

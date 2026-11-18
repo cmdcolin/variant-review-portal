@@ -16,6 +16,7 @@ import {
   describeKeys,
   liveLink,
   parseManifest,
+  parseSupport,
   smallVariantClass,
   supportOf,
   svClass,
@@ -637,4 +638,67 @@ test('a facet is an INFO key or FILTER on the card, a filter, and part of the ad
   })
   assert.equal(hash, '#facet%3ACLNSIG=Pathogenic%2FLikely_pathogenic')
   assert.equal(fromHash(hash)['facet:CLNSIG'], 'Pathogenic/Likely_pathogenic')
+})
+
+// i_240's case: the caller counts 3 tumor reads and none in the normal, while
+// jb2export's window takes in a germline insertion of the same size in both
+const CALLER_COUNTED = [
+  '##fileformat=VCFv4.3',
+  '##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Reads per allele">',
+  '##FORMAT=<ID=NAD,Number=1,Type=Integer,Description="ALT reads in the normal">',
+  '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tTUMOR\tNORMAL',
+  'chr1\t100\tins\tA\t<INS>\t.\tPASS\t.\tAD:NAD\t30,3:0\t40,0',
+  'chr1\t900\tgerm\tA\tG\t.\tPASS\t.\tAD:NAD\t20,9:2\t18,7',
+  'chr1\t5000\tbare\tA\tG\t.\tPASS\t.\t.\t.\t.',
+].join('\n')
+
+function callerCounted(support) {
+  return buildCards({
+    vcfText: CALLER_COUNTED,
+    support: parseSupport(support),
+    sets: [
+      {
+        name: 'r',
+        labels: ['tumor', 'normal'],
+        rows: parseManifest(
+          [
+            'file\tlocs\tname\tline\tevent\talt\tstatus',
+            '1.png\tchr1:1-200\tins\t5\t\t32/35,42/48\tok',
+            '2.png\tchr1:800-1000\tgerm\t6\t\t9/29,0/25\tok',
+            '3.png\tchr1:4900-5100\tbare\t7\t\t0/30,0/30\tok',
+          ].join('\n'),
+        ),
+      },
+    ],
+  })
+}
+
+test('--support groups the queue on the caller’s counts where a record has them', () => {
+  assert.deepEqual(
+    callerCounted('').map(c => c.support),
+    ['control', 'sample', 'none'],
+  )
+  // a Number=R key's first value is the REF's reads, and a record with no
+  // value keeps jb2export's count
+  assert.deepEqual(
+    callerCounted('AD,NAD').map(c => c.support),
+    ['sample', 'control', 'none'],
+  )
+  assert.deepEqual(
+    callerCounted('TUMOR:AD,NORMAL:AD').map(c => c.support),
+    ['sample', 'control', 'none'],
+  )
+  // jb2export's counts stay on the card beside the caller's
+  assert.deepEqual(
+    callerCounted('AD,NAD')[0].lanes.map(l => l.reads),
+    [32, 42],
+  )
+})
+
+test('--support refuses a key or a sample the VCF does not have', () => {
+  assert.throws(() => callerCounted('DV'), /no FORMAT key DV/)
+  assert.throws(
+    () => callerCounted('BLOOD:AD'),
+    /no sample column BLOOD, only TUMOR, NORMAL/,
+  )
 })

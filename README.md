@@ -87,6 +87,14 @@ than 5.0.0-beta.8. Small variants and the reads with a record's ALT need a
   supporting read, supporting reads in a control too, supporting reads in the
   sample only. One noisy base in one normal read files a call under the second,
   so the groups order the queue and the picture decides the card.
+- **Or the caller's own counts.** A caller that writes its supporting reads per
+  sample has usually counted better: on COLO829, `d_163` and `d_38` read zero
+  supporting reads here, because their reads delete a few bases right of the
+  caller's position, where nanomonsv's `AD` has 3 and 4. `--support AD,NAD`
+  groups the queue on those, the sample's key first and its controls' after
+  (`--support TUMOR:DV,NORMAL:DV` for a two-sample VCF), and jb2export's counts
+  stay on the card as the second opinion that catches a split read in the normal
+  the caller did not count.
 - **What the caller wrote.** The record's `SVTYPE`, size, `FILTER` and `QUAL`,
   its sample columns (`AF`, `AD`, `DP`, whatever the caller's `FORMAT` holds)
   and, under **VCF record**, every `INFO` key. Hover a key or a filter for the
