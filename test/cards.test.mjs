@@ -323,6 +323,31 @@ test('verdicts round-trip through the exported TSV', () => {
   )
 })
 
+// one header line more moves every record, and its manifest row, down one
+const bump = manifest =>
+  manifest.replaceAll(
+    /^([^\t]+\t[^\t]+\t[^\t]*\t)(\d+)\t/gm,
+    (_, before, line) => `${before}${Number(line) + 1}\t`,
+  )
+
+test('a verdict follows its record into a re-annotated callset', () => {
+  const tsv = toTsv(cards(), { 8: 'real', 9: 'artifact' })
+  const [headerLine, ...rest] = VCF.split('\n')
+  const reannotated = buildCards({
+    vcfText: [headerLine, '##SnpEffVersion="5.2"', ...rest].join('\n'),
+    sets: [
+      { name: 'tumor', labels: ['tumor'], rows: parseManifest(bump(TUMOR)) },
+    ],
+  })
+  const { changes, unknown } = fromTsv(tsv, reannotated)
+  const verdictOn = title =>
+    changes[reannotated.find(c => c.title === title).id]
+  assert.deepEqual(
+    [verdictOn('a'), verdictOn('chr1:9,000'), verdictOn('ins1'), unknown],
+    ['real', 'artifact', null, 0],
+  )
+})
+
 test('sizes read in the unit a reviewer says them in', () => {
   assert.deepEqual([172, 6430, 4_500_000, undefined].map(sizeLabel), [
     '172 bp',
