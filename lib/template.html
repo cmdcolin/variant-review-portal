@@ -251,9 +251,11 @@
       .card[data-verdict='artifact'] {
         --verdict: var(--artifact);
       }
-      .card,
-      .index tr {
+      .card {
         scroll-margin-top: calc(var(--header-h, 110px) + 10px);
+      }
+      .index tr {
+        scroll-margin-top: calc(var(--header-h, 110px) + 80px);
       }
       .card[data-current='true'] {
         outline: 2px solid var(--accent);
@@ -308,28 +310,46 @@
         color: GrayText;
       }
       .impact,
-      .filter {
-        padding: 0 7px;
-        border: 1px solid currentColor;
-        border-radius: 4px;
+      .filter,
+      .verdict {
+        --pill: GrayText;
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--pill) 16%, transparent);
+        color: var(--pill);
         font-size: 11px;
         font-weight: 600;
-        letter-spacing: 0.04em;
+        line-height: 16px;
+        letter-spacing: 0.03em;
         white-space: nowrap;
-        color: GrayText;
       }
       .impact[data-impact='HIGH'] {
-        color: var(--artifact);
+        --pill: var(--artifact);
       }
       .impact[data-impact='MODERATE'] {
-        color: var(--unsure);
+        --pill: var(--unsure);
+      }
+      .impact[data-impact='LOW'],
+      .impact[data-impact='MODIFIER'] {
+        background: none;
       }
       .filter {
-        font-family: ui-monospace, monospace;
-        font-weight: 500;
-        letter-spacing: 0;
-        color: var(--unsure);
+        --pill: var(--unsure);
         cursor: help;
+      }
+      .verdict {
+        background: var(--pill);
+        color: var(--on-accent);
+      }
+      .verdict[data-v='real'] {
+        --pill: var(--real);
+      }
+      .verdict[data-v='unsure'] {
+        --pill: var(--unsure);
+      }
+      .verdict[data-v='artifact'] {
+        --pill: var(--artifact);
       }
       /* what was counted off the picture, then what the caller wrote */
       .evidence {
@@ -538,6 +558,7 @@
       }
       /* the callset at a glance: the same queue, a line a card */
       .index {
+        --rule: color-mix(in srgb, ButtonBorder 25%, transparent);
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
@@ -548,11 +569,16 @@
         text-align: left;
         font-size: 12px;
         color: GrayText;
-        padding: 0 10px 6px;
+        padding: 0 8px 8px;
       }
-      .index th {
+      .index caption b {
+        color: CanvasText;
+        font-weight: 600;
+      }
+      .index thead th {
         position: sticky;
         top: var(--header-h, 110px);
+        z-index: 1;
         background: Canvas;
         text-align: left;
         font-size: 11px;
@@ -560,26 +586,46 @@
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: GrayText;
-        padding: 6px 10px;
-        border-bottom: 1px solid ButtonBorder;
+        height: 30px;
+        padding: 0 8px;
+        box-shadow: inset 0 -1px ButtonBorder;
         white-space: nowrap;
       }
+      .index .group th {
+        position: sticky;
+        top: calc(var(--header-h, 110px) + 30px);
+        background: Canvas;
+        text-align: left;
+        padding: 14px 8px 6px;
+        box-shadow: inset 0 -1px ButtonBorder;
+        font-weight: normal;
+        cursor: default;
+      }
+      .index .group .tally {
+        margin-left: 10px;
+        font-size: 12px;
+        color: GrayText;
+      }
       .index td {
-        padding: 5px 10px;
-        border-bottom: 1px solid ButtonBorder;
-        vertical-align: baseline;
+        height: 33px;
+        padding: 0 8px;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+      .index td:first-child {
+        box-shadow: inset 3px 0 var(--cls, transparent);
       }
       .index .n {
         text-align: right;
-        white-space: nowrap;
       }
-      .index td[data-zero='true'] {
+      .index .dim {
         color: GrayText;
       }
-      .index tr {
+      .index tbody tr:not(.group) {
         cursor: pointer;
       }
-      .index tbody tr:hover {
+      .index tbody tr:not(.group):hover {
         background: ButtonFace;
       }
       .index tr[data-current='true'] {
@@ -591,12 +637,11 @@
         font-family: ui-monospace, monospace;
         font-size: 12px;
       }
-      /* an event of ten loci wraps between them, never inside one */
       .index .where {
         color: GrayText;
       }
-      .index .where span {
-        white-space: nowrap;
+      .index .where .away {
+        color: CanvasText;
       }
       .index .open {
         border: 0;
@@ -604,24 +649,18 @@
         background: none;
         color: LinkText;
       }
-      .index .verdict {
-        font-weight: 600;
-        white-space: nowrap;
-      }
-      .index tr[data-verdict='real'] .verdict {
-        color: var(--real);
-      }
-      .index tr[data-verdict='unsure'] .verdict {
-        color: var(--unsure);
-      }
-      .index tr[data-verdict='artifact'] .verdict {
-        color: var(--artifact);
-      }
-      .index .note-cell {
-        max-width: 28ch;
+      .index .gene-cell div {
+        max-width: 22ch;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
+      }
+      .index thead th:last-child {
+        width: 100%;
+      }
+      .index .note-cell {
+        max-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
         color: GrayText;
       }
       .segmented {

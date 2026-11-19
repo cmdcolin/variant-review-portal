@@ -137,8 +137,12 @@ try {
     ),
     'the table fits the window',
   )
-  assert.equal(await count('.index tbody tr'), 1)
-  assert.match(await text('.index tbody tr'), /fus.*41.*Real.*clean fan/)
+  assert.equal(await count('.index tbody tr:not(.group)'), 1)
+  assert.match(await text('.index .group'), /1 call · 1 judged/)
+  assert.match(
+    await text('.index tbody tr:not(.group)'),
+    /fus.*41.*Real.*clean fan/,
+  )
   await page.keyboard.press('Enter')
   assert.equal(await count('.card'), 1)
 

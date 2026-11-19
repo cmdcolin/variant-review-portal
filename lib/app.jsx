@@ -7,7 +7,6 @@ import {
   FACET_PREFIX,
   FILTER_DEFAULTS,
   fromHash,
-  laneCount,
   fromTsv,
   matches,
   mergeEdits,
@@ -46,10 +45,10 @@ function facts(card) {
   ].filter(Boolean)
 }
 
-function geneLabel(card) {
+function geneLabel(card, shown = GENES_SHOWN) {
   const { genes } = card
-  return genes.length > GENES_SHOWN
-    ? `${genes.slice(0, GENES_SHOWN).join(' · ')} +${genes.length - GENES_SHOWN}`
+  return genes.length > shown
+    ? `${genes.slice(0, shown).join(' · ')} +${genes.length - shown}`
     : genes.join(' · ')
 }
 
@@ -65,7 +64,7 @@ function Filter({ card, describe }) {
         .filter(Boolean)
         .join('\n')}
     >
-      {card.filter}
+      {card.filter.replaceAll('_', ' ').replaceAll(';', ', ')}
     </span>
   ) : null
 }
@@ -274,6 +273,58 @@ const Card = React.memo(function Card({
   )
 })
 
+const chromOf = loc => loc.split(':')[0]
+
+const headOf = card =>
+  card.pos === undefined
+    ? card.locs[0]
+    : `${card.chrom}:${card.pos.toLocaleString('en-US')}`
+
+const awayOf = card =>
+  [...new Set(card.locs.slice(1).map(chromOf))].filter(
+    c => c !== chromOf(headOf(card)),
+  )
+
+function Where({ card }) {
+  const head = headOf(card)
+  const away = awayOf(card)
+  return (
+    <>
+      {head === card.title ? '' : head}
+      {away.length ? (
+        <span className="away">
+          {' ↔ '}
+          {away[0]}
+          {away.length > 1 ? ` +${away.length - 1}` : ''}
+        </span>
+      ) : null}
+    </>
+  )
+}
+
+const laneOf = (card, label) => card.lanes.find(l => l.label === label)
+
+const counted = lane => lane?.split !== undefined || lane?.alt !== undefined
+
+function Reads({ lane }) {
+  return counted(lane) ? (
+    <span className={lane.reads ? '' : 'dim'}>
+      {lane.split === undefined ? null : (
+        <span className={lane.alt !== undefined && !lane.split ? 'dim' : ''}>
+          {lane.split}
+          {lane.alt === undefined ? '' : '+'}
+        </span>
+      )}
+      {lane.alt === undefined ? null : (
+        <>
+          {lane.alt}
+          <span className="dim">/{lane.depth}</span>
+        </>
+      )}
+    </span>
+  ) : null
+}
+
 function Table({
   cards,
   classes,
@@ -287,53 +338,159 @@ function Table({
   onOpen,
   bind,
 }) {
-  // the FORMAT number the queue is ordered on, beside the rows it orders
   const sortedOn = sort.startsWith('format:')
     ? sort.slice('format:'.length)
     : undefined
+  const decimals = cards.some(c => {
+    const v = sortValue(c, sort)
+    return v !== undefined && !Number.isInteger(v)
+  })
+    ? 2
+    : 0
+  const columns = [
+    {
+      key: 'call',
+      head: 'Call',
+      cell: card => (
+        <button
+          type="button"
+          className="open"
+          title="Show this card"
+          onClick={() => {
+            onOpen(card.id)
+          }}
+        >
+          {card.title}
+        </button>
+      ),
+    },
+    {
+      key: 'genes',
+      head: 'Genes',
+      className: 'gene-cell',
+      has: card => card.genes.length > 0 || !!card.change,
+      title: card => [...card.genes, ...card.effects].join(', '),
+      cell: card => (
+        <div>
+          <span className="genes">{geneLabel(card, 2)}</span>
+          {card.change ? <span className="change"> {card.change}</span> : null}
+        </div>
+      ),
+    },
+    {
+      key: 'impact',
+      head: 'Impact',
+      has: card => !!card.impact,
+      cell: card =>
+        card.impact ? (
+          <span className="impact" data-impact={card.impact}>
+            {card.impact}
+          </span>
+        ) : null,
+    },
+    {
+      key: 'where',
+      head: 'Position',
+      className: 'where',
+      has: card => headOf(card) !== card.title || awayOf(card).length > 0,
+      title: card => card.locs.join('\n'),
+      cell: card => <Where card={card} />,
+    },
+    {
+      key: 'size',
+      head: 'Size',
+      numeric: true,
+      has: card => card.size !== undefined,
+      cell: card => sizeLabel(card.size),
+    },
+    ...lanes.map(label => ({
+      key: `lane:${label}`,
+      head: label,
+      headTitle:
+        'Split reads joining the loci, and reads with the ALT of those covering it',
+      numeric: true,
+      has: card => counted(laneOf(card, label)),
+      cell: card => <Reads lane={laneOf(card, label)} />,
+    })),
+    ...(sortedOn
+      ? [
+          {
+            key: 'sorted',
+            head: sortedOn,
+            headTitle: describe.FORMAT[sortedOn],
+            numeric: true,
+            cell: card => sortValue(card, sort)?.toFixed(decimals) ?? '',
+          },
+        ]
+      : []),
+    {
+      key: 'filter',
+      head: 'Filter',
+      has: card => isFailing(card.filter),
+      cell: card => <Filter card={card} describe={describe} />,
+    },
+    {
+      key: 'verdict',
+      head: 'Verdict',
+      cell: card =>
+        verdicts[card.id] ? (
+          <span className="verdict" data-v={verdicts[card.id]}>
+            {VERDICTS.find(b => b.v === verdicts[card.id])?.label}
+          </span>
+        ) : null,
+    },
+    {
+      key: 'note',
+      head: 'Note',
+      className: 'note-cell',
+      has: card => !!notes[card.id],
+      cell: card => notes[card.id] ?? '',
+    },
+  ].filter(col => !col.has || cards.some(col.has))
   return (
     <table className="index">
-      {lanes.length ? (
+      {columns.some(col => col.key.startsWith('lane:')) ? (
         <caption>
-          Reads per track: <b>13</b> split reads joining the loci, <b>17/41</b>{' '}
-          reads with the ALT of those covering it, <b>3+4/41</b> both
+          Reads per track: <b>13</b> split reads joining the loci,{' '}
+          <b>
+            17<span className="dim">/41</span>
+          </b>{' '}
+          reads with the ALT of those covering it,{' '}
+          <b>
+            3+4<span className="dim">/41</span>
+          </b>{' '}
+          both
         </caption>
       ) : null}
       <thead>
         <tr>
-          <th>Class</th>
-          <th>Call</th>
-          <th>Genes</th>
-          <th>Where</th>
-          <th className="n">Size</th>
-          {lanes.map(l => (
+          {columns.map(col => (
             <th
-              className="n"
-              key={l}
-              title="Split reads joining the loci, and reads with the ALT of those covering it"
+              key={col.key}
+              className={col.numeric ? 'n' : undefined}
+              title={col.headTitle}
             >
-              {l}
+              {col.head}
             </th>
           ))}
-          {sortedOn ? (
-            <th className="n" title={describe.FORMAT[sortedOn]}>
-              {sortedOn}
-            </th>
-          ) : null}
-          <th>Filter</th>
-          <th>Verdict</th>
-          <th>Note</th>
         </tr>
       </thead>
-      <tbody>
-        {cards.map(card => {
-          const verdict = verdicts[card.id] ?? ''
-          return (
+      {[...Map.groupBy(cards, c => c.cls)].map(([cls, rows]) => (
+        <tbody key={cls} data-cls={cls}>
+          <tr className="group">
+            <th colSpan={columns.length} scope="rowgroup">
+              <span className="chip">{classes[cls] ?? cls}</span>
+              <span className="tally">
+                {plural(rows.length, 'call')}
+                {' · '}
+                {rows.filter(c => verdicts[c.id]).length} judged
+              </span>
+            </th>
+          </tr>
+          {rows.map(card => (
             <tr
               key={card.id}
               ref={el => bind(card.id, el)}
-              data-cls={card.cls}
-              data-verdict={verdict}
               data-current={card.id === cursor ? 'true' : undefined}
               onClick={() => {
                 onPick(card.id)
@@ -342,66 +499,19 @@ function Table({
                 onOpen(card.id)
               }}
             >
-              <td>
-                <span className="chip">{classes[card.cls]}</span>
-              </td>
-              <td>
-                <button
-                  type="button"
-                  className="open"
-                  title="Show this card"
-                  onClick={() => {
-                    onOpen(card.id)
-                  }}
+              {columns.map(col => (
+                <td
+                  key={col.key}
+                  className={col.numeric ? 'n' : col.className}
+                  title={col.title?.(card)}
                 >
-                  {card.title}
-                </button>
-              </td>
-              <td title={[...card.genes, ...card.effects].join(', ')}>
-                <span className="genes">{geneLabel(card)}</span>{' '}
-                {card.change ? (
-                  <span className="change">{card.change} </span>
-                ) : null}
-                {card.impact ? (
-                  <span className="impact" data-impact={card.impact}>
-                    {card.impact}
-                  </span>
-                ) : null}
-              </td>
-              <td className="where">
-                {card.locs.map((loc, i) => (
-                  <React.Fragment key={loc}>
-                    {i ? ' ' : ''}
-                    <span>
-                      {i ? '↔ ' : ''}
-                      {loc}
-                    </span>
-                  </React.Fragment>
-                ))}
-              </td>
-              <td className="n">{sizeLabel(card.size)}</td>
-              {lanes.map(l => {
-                const lane = card.lanes.find(x => x.label === l)
-                return (
-                  <td className="n" key={l} data-zero={!lane?.reads}>
-                    {lane ? laneCount(lane) : ''}
-                  </td>
-                )
-              })}
-              {sortedOn ? (
-                <td className="n">{sortValue(card, sort) ?? ''}</td>
-              ) : null}
-              <td>
-                <Filter card={card} describe={describe} />
-              </td>
-              <td className="verdict">
-                {VERDICTS.find(b => b.v === verdict)?.label ?? ''}
-              </td>
-              <td className="note-cell">{notes[card.id] ?? ''}</td>
+                  {col.cell(card)}
+                </td>
+              ))}
             </tr>
-          )
-        })}
-      </tbody>
+          ))}
+        </tbody>
+      ))}
     </table>
   )
 }
@@ -515,14 +625,16 @@ export function App({ data }) {
     }
   }, [])
 
-  const visible = useMemo(
-    () =>
-      sortCards(
-        data.cards.filter(c => matches(c, { ...filter, verdicts })),
-        sort,
-      ),
-    [data.cards, filter, verdicts, sort],
-  )
+  const visible = useMemo(() => {
+    const sorted = sortCards(
+      data.cards.filter(c => matches(c, { ...filter, verdicts })),
+      sort,
+    )
+    const rank = Object.keys(data.classes)
+    return view === 'table'
+      ? sorted.toSorted((a, b) => rank.indexOf(a.cls) - rank.indexOf(b.cls))
+      : sorted
+  }, [data.cards, data.classes, filter, verdicts, sort, view])
   const counts = useMemo(
     () => tallyVerdicts(data.cards, verdicts),
     [data.cards, verdicts],

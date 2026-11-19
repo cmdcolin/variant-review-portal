@@ -7,9 +7,10 @@ and <kbd>/</kbd> jumps to the search box. The same digit twice takes a verdict
 back off.
 
 <kbd>t</kbd> swaps the cards for the table, where the same keys judge a row and
-<kbd>Enter</kbd> opens its card. The order select sorts either by size, by split
-reads, by the reads a control has, or by any number in the caller's sample
-column.
+<kbd>Enter</kbd> opens its card. The table splits the queue into one section per
+class, each in the chosen order, and <kbd>j</kbd> and <kbd>k</kbd> walk the
+sections top to bottom. The order select sorts either by size, by split reads,
+by the reads a control has, or by any number in the caller's sample column.
 
 Set **Unreviewed** as the verdict filter and the queue drains as it is judged.
 
