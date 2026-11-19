@@ -22,3 +22,6 @@ Verdicts and notes live in the reviewer's browser. **Export** writes them as TSV
 beside each record's line, id, coordinates, genes and supporting-read counts,
 and **Import** reads that TSV back, so a second reviewer or a cleared browser
 does not start the review again.
+
+Until then the work is in one browser only, so **Export** counts the cards
+judged or noted since the last export or import, as `Export · 3 new`.

@@ -1,5 +1,6 @@
 // Drive a built portal in Chrome: the page hydrates, takes a verdict and a note,
-// keeps both across a reload, and the address reopens the same card.
+// keeps both across a reload, the address reopens the same card, and Export
+// counts what it has not yet written out.
 //   node test/browser.mjs
 // Needs puppeteer's Chrome, or PUPPETEER_EXECUTABLE_PATH.
 import assert from 'node:assert/strict'
@@ -99,6 +100,7 @@ try {
   await page.keyboard.press('Enter')
   assert.match(await text('#done'), /1 of 3 judged/)
   assert.equal(new URL(page.url()).hash, '#card=6')
+  assert.equal(await text('#export'), 'Export · 1 new')
 
   await page.select('#sf', 'control')
   assert.equal(await count('.card'), 1)
@@ -127,6 +129,12 @@ try {
   assert.match(await text('.index tbody tr'), /fus.*41.*Real.*clean fan/)
   await page.keyboard.press('Enter')
   assert.equal(await count('.card'), 1)
+
+  assert.equal(await text('#export'), 'Export · 1 new')
+  await page.click('#export')
+  assert.equal(await text('#export'), 'Export')
+  await page.reload({ waitUntil: 'networkidle0' })
+  assert.equal(await text('#export'), 'Export')
 
   assert.deepEqual(problems, [])
   console.log('browser test passed')

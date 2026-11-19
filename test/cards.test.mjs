@@ -5,11 +5,13 @@ import {
   fromHash,
   fromTsv,
   matches,
+  mergeEdits,
   sizeLabel,
   sortCards,
   sortOptions,
   toHash,
   toTsv,
+  unexported,
 } from '../lib/review.mjs'
 import {
   buildCards,
@@ -267,6 +269,29 @@ test('a deletion of two windows counts its split reads and its gapped reads', ()
   assert.match(toTsv([del], {}), /tumor=3\+4\/56;normal=0\+0\/59/)
 })
 
+test('a deletion no read spans counts its split reads alone', () => {
+  const [del] = buildCards({
+    vcfText: VCF,
+    sets: [
+      {
+        name: 'tumor_normal',
+        labels: ['tumor', 'normal'],
+        rows: parseManifest(
+          [
+            'file\tlocs\tname\tline\tevent\tlinks\talt\tstatus',
+            '2_del.png\tchr1:8400-9000 chr1:9100-9772\t\t9\t\t13,0\t0/0,0/28\tok',
+          ].join('\n'),
+        ),
+      },
+    ],
+  })
+  assert.deepEqual(del.lanes, [
+    { label: 'tumor', split: 13, reads: 13 },
+    { label: 'normal', split: 0, alt: 0, depth: 28, reads: 0 },
+  ])
+  assert.match(toTsv([del], {}), /tumor=13;normal=0\+0\/28/)
+})
+
 test('a link opens the view the manifest says the image was drawn in', () => {
   const view = {
     type: 'LinearGenomeView',
@@ -322,6 +347,22 @@ test('verdicts round-trip through the exported TSV', () => {
     [changes['8'], changes['event:der3'], changes['9'], applied, unknown],
     ['real', 'artifact', null, 4, 0],
   )
+})
+
+test('a verdict or note counts as unexported until an export or import holds it', () => {
+  const all = cards()
+  const exported = { verdicts: { 8: 'real' }, notes: {} }
+  const now = {
+    verdicts: { 8: 'artifact', 9: 'real', gone: 'real' },
+    notes: { 'event:der3': 'check the normal' },
+  }
+  assert.equal(unexported(all, now, exported), 3)
+  const imported = {
+    verdicts: mergeEdits(exported.verdicts, { 8: 'artifact', 9: 'real' }),
+    notes: mergeEdits(exported.notes, { 'event:der3': 'check the normal' }),
+  }
+  assert.equal(unexported(all, now, imported), 0)
+  assert.deepEqual(mergeEdits({ 8: 'real', 9: 'real' }, { 8: null, 9: '' }), {})
 })
 
 // one header line more moves every record, and its manifest row, down one

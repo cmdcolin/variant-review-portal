@@ -10,11 +10,13 @@ import {
   laneCount,
   fromTsv,
   matches,
+  mergeEdits,
   sizeLabel,
   sortCards,
   sortOptions,
   sortValue,
   storageKey,
+  unexported,
   tallyVerdicts,
   toHash,
   toTsv,
@@ -291,6 +293,12 @@ function Table({
     : undefined
   return (
     <table className="index">
+      {lanes.length ? (
+        <caption>
+          Reads per track: <b>13</b> split reads joining the loci, <b>17/41</b>{' '}
+          reads with the ALT of those covering it, <b>3+4/41</b> both
+        </caption>
+      ) : null}
       <thead>
         <tr>
           <th>Class</th>
@@ -405,6 +413,7 @@ export function App({ data }) {
   const [ready, setReady] = useState(false)
   const [verdicts, setVerdicts] = useState({})
   const [notes, setNotes] = useState({})
+  const [exported, setExported] = useState({ verdicts: {}, notes: {} })
   const [keysOpen, setKeysOpen] = useState(false)
   const [fit, setFit] = useState(true)
   const [filter, setFilter] = useState(FILTER_DEFAULTS)
@@ -427,6 +436,7 @@ export function App({ data }) {
       )
       setVerdicts(saved.verdicts ?? {})
       setNotes(saved.notes ?? {})
+      setExported(saved.exported ?? { verdicts: {}, notes: {} })
       setKeysOpen(!!saved.keys)
       setFit(saved.fit ?? true)
     } catch {
@@ -455,12 +465,18 @@ export function App({ data }) {
     try {
       localStorage.setItem(
         storageKey(data.portalId),
-        JSON.stringify({ verdicts, notes, keys: keysOpen, fit }),
+        JSON.stringify({
+          verdicts,
+          notes,
+          exported,
+          keys: keysOpen,
+          fit,
+        }),
       )
     } catch {
       /* nothing to do; the page still works for this session */
     }
-  }, [ready, data.portalId, verdicts, notes, keysOpen, fit])
+  }, [ready, data.portalId, verdicts, notes, exported, keysOpen, fit])
 
   useEffect(() => {
     if (ready) {
@@ -512,6 +528,10 @@ export function App({ data }) {
     [data.cards, verdicts],
   )
   const done = VERDICTS.reduce((n, b) => n + counts[b.v], 0)
+  const pending = useMemo(
+    () => unexported(data.cards, { verdicts, notes }, exported),
+    [data.cards, verdicts, notes, exported],
+  )
 
   useEffect(() => {
     if (!ready || !wantScroll.current) {
@@ -705,6 +725,7 @@ export function App({ data }) {
     setTimeout(() => {
       URL.revokeObjectURL(a.href)
     }, 1000)
+    setExported({ verdicts, notes })
   }
 
   function importTsv(file) {
@@ -718,26 +739,12 @@ export function App({ data }) {
         say(res.error)
         return
       }
-      const next = { ...verdicts }
-      for (const [id, v] of Object.entries(res.changes)) {
-        if (v === null) {
-          delete next[id]
-        } else {
-          next[id] = v
-        }
-      }
-      setVerdicts(next)
-      setNotes(prev => {
-        const merged = { ...prev }
-        for (const [id, text] of Object.entries(res.notes)) {
-          if (text) {
-            merged[id] = text
-          } else {
-            delete merged[id]
-          }
-        }
-        return merged
-      })
+      setVerdicts(prev => mergeEdits(prev, res.changes))
+      setNotes(prev => mergeEdits(prev, res.notes))
+      setExported(prev => ({
+        verdicts: mergeEdits(prev.verdicts, res.changes),
+        notes: mergeEdits(prev.notes, res.notes),
+      }))
       say(
         `${plural(res.applied, 'verdict')} read in${
           res.unknown
@@ -895,8 +902,18 @@ export function App({ data }) {
               e.target.value = ''
             }}
           />
-          <button id="export" type="button" onClick={exportTsv}>
-            Export
+          <button
+            id="export"
+            type="button"
+            data-pending={pending > 0}
+            title={
+              pending
+                ? `${plural(pending, 'card')} judged or noted since the last export live only in this browser`
+                : 'Download every verdict and note as TSV'
+            }
+            onClick={exportTsv}
+          >
+            Export{pending ? ` · ${pending} new` : ''}
           </button>
           <button
             id="reset"
@@ -906,6 +923,7 @@ export function App({ data }) {
               if (confirm('Clear every verdict and note on this portal?')) {
                 setVerdicts({})
                 setNotes({})
+                setExported({ verdicts: {}, notes: {} })
               }
             }}
           >

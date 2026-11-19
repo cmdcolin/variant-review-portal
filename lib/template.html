@@ -159,7 +159,7 @@
         color: FieldText;
       }
       input[type='search'] {
-        min-width: 190px;
+        min-width: 280px;
       }
       /* a select is as wide as its longest option, and a facet's can be a
          sentence */
@@ -543,6 +543,13 @@
         font-size: 13px;
         font-variant-numeric: tabular-nums;
       }
+      .index caption {
+        caption-side: top;
+        text-align: left;
+        font-size: 12px;
+        color: GrayText;
+        padding: 0 10px 6px;
+      }
       .index th {
         position: sticky;
         top: var(--header-h, 110px);
@@ -626,6 +633,10 @@
       .segmented button:last-child {
         border-radius: 0 6px 6px 0;
         border-left: 0;
+      }
+      #export[data-pending='true'] {
+        border-color: var(--unsure);
+        color: var(--unsure);
       }
       .actions button[aria-pressed='true'] {
         background: var(--accent);
