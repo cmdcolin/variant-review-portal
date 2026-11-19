@@ -142,7 +142,7 @@ if (!values.support) {
     [
       'needs --support: the FORMAT keys the caller counts supporting reads under, the sample under review first, such as --support TUMOR:AD,NORMAL:AD.',
       `This VCF's samples: ${samples.join(', ') || 'none'}`,
-      `Its integer FORMAT keys: ${keys.join(', ') || 'none'}`,
+      `Its numeric FORMAT keys: ${keys.join(', ') || 'none'}`,
       'Or --support jb2export, to group on the reads jb2export counted.',
     ].join('\n'),
   )

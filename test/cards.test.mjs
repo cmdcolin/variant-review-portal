@@ -737,9 +737,21 @@ test('--support groups the queue on the caller’s counts where a record has the
   )
 })
 
-test('a VCF says what --support can name: its samples and integer FORMAT keys', () => {
+test('a VCF says what --support can name: its samples and numeric FORMAT keys', () => {
   assert.deepEqual(supportChoices(CALLER_COUNTED), {
     samples: ['TUMOR', 'NORMAL'],
+    keys: ['AD', 'NAD'],
+  })
+  // nanomonsv declares its counts Float
+  const nanomonsv = [
+    '##fileformat=VCFv4.3',
+    '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">',
+    '##FORMAT=<ID=AD,Number=1,Type=Float,Description="Alternate allele depth in the tumor BAM">',
+    '##FORMAT=<ID=NAD,Number=1,Type=Float,Description="Alternate allele depth in the normal BAM">',
+    '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tCOLO829',
+  ].join('\n')
+  assert.deepEqual(supportChoices(nanomonsv), {
+    samples: ['COLO829'],
     keys: ['AD', 'NAD'],
   })
 })

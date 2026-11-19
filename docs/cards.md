@@ -15,7 +15,7 @@
   `--support AD,NAD` reads nanomonsv's tumor and normal counts from one column,
   and `--support TUMOR:AD,NORMAL:AD` reads `AD` from two. Which column is the
   sample is the builder's to say: left out, the build stops and lists the VCF's
-  samples and integer FORMAT keys. The support filter sorts a callset three
+  samples and numeric FORMAT keys. The support filter sorts a callset three
   ways: no supporting read, supporting reads in a control too, supporting reads
   in the sample only.
 - **jb2export's counts, as a second opinion.** `jb2export` reports the split
