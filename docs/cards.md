@@ -9,25 +9,25 @@
   deletion on top. Any other track of the run is in the image too: genes, the
   callset itself, repeats. The image scales to the window so a whole card is on
   screen at once; click it, or press <kbd>f</kbd>, for full size.
-- **Supporting reads, counted per track.** `jb2export` reports the split reads
-  joining an image's windows, and, where a record's ALT says what a read carries
-  (an SNV, an indel, a deletion or an insertion), the reads with the ALT over
-  the reads covering it. A deletion of two windows has both, printed as
-  `3 split + 4 gapped of 56 reads`: an aligner writes a deletion as a gap up to
-  a size and as two pieces past it. An insertion of 50 bases or more is counted
-  wherever in the image the aligner placed it. `--images tumor,normal=reads`
-  names the tracks, and the support filter sorts a callset three ways: no
-  supporting read, supporting reads in a control too, supporting reads in the
-  sample only. One noisy base in one normal read files a call under the second,
-  so the groups order the queue and the picture decides the card.
-- **Or the caller's own counts.** A caller that writes its supporting reads per
-  sample has usually counted better: on COLO829, `d_163` and `d_38` read zero
-  supporting reads here, because their reads delete a few bases right of the
-  caller's position, where nanomonsv's `AD` has 3 and 4. `--support AD,NAD`
-  groups the queue on those, the sample's key first and its controls' after
-  (`--support TUMOR:DV,NORMAL:DV` for a two-sample VCF), and jb2export's counts
-  stay on the card as the second opinion that catches a split read in the normal
-  the caller did not count.
+- **The caller's read counts.** The queue is grouped on the supporting reads the
+  VCF itself records, so `--support` is required: the FORMAT keys the caller
+  counts them under, the sample's first and its controls' after.
+  `--support AD,NAD` reads nanomonsv's tumor and normal counts from one column,
+  and `--support TUMOR:AD,NORMAL:AD` reads `AD` from two. Which column is the
+  sample is the builder's to say: left out, the build stops and lists the VCF's
+  samples and integer FORMAT keys. The support filter sorts a callset three
+  ways: no supporting read, supporting reads in a control too, supporting reads
+  in the sample only.
+- **jb2export's counts, as a second opinion.** `jb2export` reports the split
+  reads joining an image's windows, and, where a record's ALT says what a read
+  carries (an SNV, an indel, a deletion or an insertion), the reads with the ALT
+  over the reads covering it. A deletion of two windows has both, printed as
+  `3 split + 4 gapped of 56 reads`. These stay on the card beside the caller's,
+  where they catch a split read in the normal the caller did not count. They
+  miss what the caller sees: on COLO829, `d_163` and `d_38` read zero here,
+  because their reads delete a few bases right of the caller's position, where
+  nanomonsv's `AD` has 3 and 4. For a VCF that records no counts,
+  `--support jb2export` groups the queue on these instead.
 - **What the caller wrote.** The record's `SVTYPE`, size, `FILTER` and `QUAL`,
   its sample columns (`AF`, `AD`, `DP`, whatever the caller's `FORMAT` holds)
   and, under **VCF record**, every `INFO` key. Hover a key or a filter for the

@@ -14,6 +14,7 @@ jb2export batch --sites calls.vcf.gz --config portal/config.json --assembly hg38
   --track tumor_reads --track normal_reads --outDir reads --manifest
 
 variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads --out portal \
+  --support TUMOR:AD,NORMAL:AD \
   --jbrowse https://jbrowse.org/code/jb2/latest/ \
   --config https://example.org/portal/config.json
 ```

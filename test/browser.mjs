@@ -4,7 +4,7 @@
 //   node test/browser.mjs
 // Needs puppeteer's Chrome, or PUPPETEER_EXECUTABLE_PATH.
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -53,15 +53,27 @@ fs.writeFileSync(
   ].join('\n'),
 )
 const out = path.join(dir, 'portal')
-execFileSync(process.execPath, [
-  path.join(import.meta.dirname, '../bin/make-portal.mjs'),
-  '--vcf',
-  vcf,
-  '--images',
-  `tumor,normal=${images}`,
-  '--out',
-  out,
-])
+const build = support =>
+  spawnSync(
+    process.execPath,
+    [
+      path.join(import.meta.dirname, '../bin/make-portal.mjs'),
+      '--vcf',
+      vcf,
+      '--images',
+      `tumor,normal=${images}`,
+      ...support,
+      '--out',
+      out,
+    ],
+    { encoding: 'utf8' },
+  )
+// which column is the sample and which its control is the builder's to say
+const unsaid = build([])
+assert.equal(unsaid.status, 1)
+assert.match(unsaid.stderr, /needs --support/)
+assert.match(unsaid.stderr, /--support jb2export/)
+assert.equal(build(['--support', 'jb2export']).status, 0)
 
 const browser = await launch({
   executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,

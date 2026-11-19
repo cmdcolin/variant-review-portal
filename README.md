@@ -13,7 +13,8 @@ finish.
 jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \
   --track tumor_reads --track normal_reads --outDir reads --manifest
 
-variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads --out portal
+variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads \
+  --support TUMOR:AD,NORMAL:AD --out portal
 
 npx serve portal
 ```

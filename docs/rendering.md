@@ -11,9 +11,10 @@ jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \
   --track tumor_reads height:150 --track normal_reads height:150 \
   --track repeats height:50 --outDir reads --manifest
 
-# name the tracks in the images, in track order: the sample, then its controls
+# name the tracks in the images, in track order: the sample, then its controls,
+# and the FORMAT keys the caller counts their supporting reads under
 variant-review-portal --vcf calls.vcf.gz \
-  --images tumor,normal=reads --out portal
+  --images tumor,normal=reads --support TUMOR:AD,NORMAL:AD --out portal
 ```
 
 ## Versions

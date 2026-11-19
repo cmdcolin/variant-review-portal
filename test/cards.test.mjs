@@ -20,6 +20,7 @@ import {
   parseManifest,
   parseSupport,
   smallVariantClass,
+  supportChoices,
   supportOf,
   svClass,
 } from '../lib/cards.mjs'
@@ -734,6 +735,13 @@ test('--support groups the queue on the caller’s counts where a record has the
     callerCounted('AD,NAD')[0].lanes.map(l => l.reads),
     [32, 42],
   )
+})
+
+test('a VCF says what --support can name: its samples and integer FORMAT keys', () => {
+  assert.deepEqual(supportChoices(CALLER_COUNTED), {
+    samples: ['TUMOR', 'NORMAL'],
+    keys: ['AD', 'NAD'],
+  })
 })
 
 test('--support refuses a key or a sample the VCF does not have', () => {

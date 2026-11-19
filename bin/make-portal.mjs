@@ -15,10 +15,11 @@ import {
   parseManifest,
   parseSupport,
   SUPPORT,
+  supportChoices,
 } from '../lib/cards.mjs'
 import { renderPage } from '../lib/page.mjs'
 
-const HELP = `Usage: variant-review-portal --vcf <file> --images <tracks>=<dir> --out <dir>
+const HELP = `Usage: variant-review-portal --vcf <file> --images <tracks>=<dir> --support <keys> --out <dir>
 
 Builds a static review page over a VCF of structural or small variants: one card
 per record, the sample and its control in one image, what the VCF says about the
@@ -29,7 +30,8 @@ Render the images first, every alignments track in one run:
   jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \\
     --track tumor_reads --track normal_reads --outDir reads --manifest
 
-  variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads --out portal
+  variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads \\
+    --support TUMOR:AD,NORMAL:AD --out portal
 
 Options:
   --vcf       the VCF (plain or bgzipped) the run read
@@ -41,11 +43,12 @@ Options:
               first directory's rows are the cards
   --out       directory to write the portal to
   --title     page heading (default: the VCF's file name)
-  --support   the FORMAT keys the caller counts supporting reads under, the
-              sample's first and its controls' after, to group the queue on
-              instead of the reads jb2export counted: AD,NAD for nanomonsv,
-              TUMOR:DV,NORMAL:DV for a two-sample Sniffles VCF. A key alone
-              reads the first sample column
+  --support   required: the FORMAT keys the caller counts supporting reads
+              under, the sample's first and its controls' after, to group the
+              queue on: AD,NAD for nanomonsv, TUMOR:DV,NORMAL:DV for a
+              two-sample Sniffles VCF. A key alone reads the first sample
+              column. jb2export groups on the reads jb2export counted instead,
+              for a VCF that counts none
   --facet     an INFO key to print on every card and filter the queue on, such
               as CLNSIG or SUBCLONAL; repeat or separate with commas. FILTER is
               one already when the callset has more than one
@@ -133,13 +136,25 @@ if (link && !sets[0].rows.some(r => r.spec)) {
 }
 
 const vcfText = readMaybeGzip(vcf)
+if (!values.support) {
+  const { samples, keys } = supportChoices(vcfText)
+  fail(
+    [
+      'needs --support: the FORMAT keys the caller counts supporting reads under, the sample under review first, such as --support TUMOR:AD,NORMAL:AD.',
+      `This VCF's samples: ${samples.join(', ') || 'none'}`,
+      `Its integer FORMAT keys: ${keys.join(', ') || 'none'}`,
+      'Or --support jb2export, to group on the reads jb2export counted.',
+    ].join('\n'),
+  )
+}
+const fromImages = values.support === 'jb2export'
 let cards
 try {
   cards = buildCards({
     vcfText,
     sets,
     link,
-    support: parseSupport(values.support ?? ''),
+    support: fromImages ? [] : parseSupport(values.support),
     facets: [
       'FILTER',
       ...(values.facet ?? []).flatMap(f => f.split(',')).filter(Boolean),
@@ -215,9 +230,9 @@ const data = {
   } · ${labels.join(' and ')}`,
   classes: CLASSES,
   support: SUPPORT,
-  supportFrom: values.support
-    ? `the caller's ${values.support.replaceAll(',', ', ')}`
-    : 'the reads jb2export counted',
+  supportFrom: fromImages
+    ? 'the reads jb2export counted'
+    : `the caller's ${values.support.replaceAll(',', ', ')}`,
   facets: facetOptions(cards),
   describe: describeKeys(vcfText, cards),
   cards,
