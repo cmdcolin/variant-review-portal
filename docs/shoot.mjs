@@ -21,22 +21,23 @@ if (!Object.keys(portals).length) {
   process.exit(1)
 }
 
+// in the README's order, two to a row, each row's pair about the same height
 const SHOTS = [
-  { name: 'complex-event', portal: 'hg008', hash: '#card=event%3Acluster_6' },
-  { name: 'translocation', portal: 'hg008', hash: '#card=105', keys: ['1'] },
-  { name: 'gene-fusion', portal: 'sv', hash: '#card=297' },
+  { name: 'complex-event', portal: 'hg008', hash: '#card=event%3Acluster_12' },
+  { name: 'inversion', portal: 'hg008', hash: '#card=115', keys: ['1'] },
   { name: 'deletion-pten', portal: 'sv', hash: '#card=366', keys: ['1'] },
-  { name: 'large-deletion', portal: 'hg008', hash: '#card=204' },
-  { name: 'insertion', portal: 'sv', hash: '#card=385' },
+  { name: 'duplication', portal: 'hg008', hash: '#card=125' },
+  { name: 'gene-fusion', portal: 'sv', hash: '#card=297' },
+  { name: 'braf', portal: 'snv', hash: '#card=219', keys: ['1'] },
+  { name: 'translocation', portal: 'sv', hash: '#card=343', keys: ['1'] },
   {
     name: 'table',
     portal: 'sv',
     hash: '#sort=format%3AAF&view=table',
     keys: ['j', '1', 'j', '3', 'j'],
     page: true,
-    height: 740,
+    height: 1330,
   },
-  { name: 'braf', portal: 'snv', hash: '#card=219', keys: ['1'] },
 ].filter(shot => portals[shot.portal])
 
 const out = path.join(import.meta.dirname, 'gallery')
@@ -53,10 +54,10 @@ try {
     hash,
     keys = [],
     page: whole,
-    height = 900,
+    height = 1500,
   } of SHOTS) {
     const page = await browser.newPage()
-    await page.setViewport({ width: 1280, height })
+    await page.setViewport({ width: 1180, height })
     await page.emulateMediaFeatures([
       { name: 'prefers-color-scheme', value: 'light' },
       { name: 'prefers-reduced-motion', value: 'reduce' },
@@ -80,6 +81,9 @@ try {
     if (whole) {
       await page.screenshot({ path: file })
     } else {
+      // a window tall enough that each picture is drawn at its own size, and
+      // a header that scrolls away rather than covering the card
+      await page.addStyleTag({ content: 'header { position: static }' })
       const card = await page.waitForSelector('.card[data-current="true"]')
       await page.waitForFunction(() =>
         [...document.querySelectorAll('.card[data-current="true"] img')].every(
