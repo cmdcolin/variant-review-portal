@@ -10,8 +10,6 @@ real. The reads do, and a picture of them per call is a queue a person can
 finish.
 
 ```bash
-pnpm install
-
 jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \
   --track tumor_reads --track normal_reads --outDir reads --manifest
 
@@ -20,21 +18,33 @@ variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads --out porta
 npx serve portal
 ```
 
+## Install
+
+```bash
+git clone https://github.com/cmdcolin/variant-review-portal
+cd variant-review-portal
+pnpm install
+npm link                     # variant-review-portal and variant-review-slice
+npm i -g @jbrowse/img@next   # jb2export
+```
+
 ## Gallery
 
-[COLO829 somatic SVs](https://jbrowse.org/demos/colo829_review/): tumor and
-matched normal reads in one image, with a supporting-read count for each.
+[COLO829 somatic SVs](https://jbrowse.org/demos/colo829_review/), filtered to
+the calls only the tumor carries: a breakend joined by 59 tumor split reads and
+none in the matched normal.
 
-![A card per call: the tumor's reads above the normal's, genes and repeats around them](docs/review-cards.png)
+![A breakend card: the tumor's split reads arc between the two ends, the normal below has none](docs/review-cards.png)
 
 The same callset as a table, ordered by the caller's allele fraction.
 
 ![The callset as a table, one row per record](docs/review-table.png)
 
 [COLO829 coding variants](https://jbrowse.org/demos/colo829_snv_review/): _BRAF_
-V600E, the ALT base in 64 of 88 tumor reads and none of the normal's.
+V600E, written `p.Val640Glu` on the MANE transcript, with the ALT base in 64 of
+88 tumor reads and none of the normal's.
 
-![A small-variant card: one panel sorted at the base](docs/review-snv.png)
+![The BRAF V600E card: the ALT base stacked in the tumor's reads, absent from the normal's](docs/review-snv.png)
 
 [HG008-T somatic SVs](https://jbrowse.org/demos/hg008_review/) is a third hosted
 portal, PacBio HiFi, with reads carried in the portal itself.

@@ -1,9 +1,5 @@
 # Development
 
-```bash
-pnpm install
-```
-
 React, react-dom and esbuild build the page, and
 [`@gmod/vcf`](https://www.npmjs.com/package/@gmod/vcf) reads the callset. The
 page is [gene-review-portal](https://github.com/cmdcolin/gene-review-portal)'s,
@@ -27,16 +23,14 @@ pnpm format
 
 ## Screenshots
 
-`docs/shoot.mjs` rebuilds `docs/review-cards.png` and `docs/review-table.png`
-from a built portal, a directory or a hosted URL, in light mode:
+`docs/shoot.mjs` rebuilds the README's three screenshots in light mode, from
+built portals given as directories or hosted URLs. The README's are the hosted
+COLO829 portals:
 
 ```bash
-node docs/shoot.mjs https://jbrowse.org/demos/colo829_review/
+node docs/shoot.mjs https://jbrowse.org/demos/colo829_review/ \
+  https://jbrowse.org/demos/colo829_snv_review/
 ```
 
-The README's shots are of the hosted
-[COLO829 somatic SV portal](https://jbrowse.org/demos/colo829_review/), 135
-records over the ONT open-data reads, rendered from the public bucket in under
-five minutes. `docs/review-snv.png` is the
-[coding variant portal](https://jbrowse.org/demos/colo829_snv_review/) filtered
-to _BRAF_ V600E.
+The SV portal is 135 records over the ONT open-data reads, rendered from the
+public bucket in under five minutes.
