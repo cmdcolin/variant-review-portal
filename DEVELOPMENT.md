@@ -23,14 +23,16 @@ pnpm format
 
 ## Screenshots
 
-`docs/shoot.mjs` rebuilds the README's three screenshots in light mode, from
-built portals given as directories or hosted URLs. The README's are the hosted
-COLO829 portals:
+`docs/shoot.mjs` rebuilds the README's gallery in `docs/gallery/`, in light
+mode, from built portals given as directories or hosted URLs and named for the
+callset each holds. The README's are the three hosted portals:
 
 ```bash
-node docs/shoot.mjs https://jbrowse.org/demos/colo829_review/ \
-  https://jbrowse.org/demos/colo829_snv_review/
+node docs/shoot.mjs sv=https://jbrowse.org/demos/colo829_review/ \
+  snv=https://jbrowse.org/demos/colo829_snv_review/ \
+  hg008=https://jbrowse.org/demos/hg008_review/
 ```
 
-The SV portal is 135 records over the ONT open-data reads, rendered from the
-public bucket in under five minutes.
+A card shot is cropped to the card under the cursor; the table shot is the whole
+window. The SV portal is 135 records over the ONT open-data reads, rendered from
+the public bucket in under five minutes.

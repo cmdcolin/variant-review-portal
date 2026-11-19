@@ -31,24 +31,17 @@ npm i -g @jbrowse/img@next   # jb2export
 
 ## Gallery
 
-[COLO829 somatic SVs](https://jbrowse.org/demos/colo829_review/), filtered to
-the calls only the tumor carries: a breakend joined by 59 tumor split reads and
-none in the matched normal.
+Three hosted portals:
+[COLO829 somatic SVs](https://jbrowse.org/demos/colo829_review/) and
+[COLO829 coding variants](https://jbrowse.org/demos/colo829_snv_review/) on ONT
+reads, and [HG008-T somatic SVs](https://jbrowse.org/demos/hg008_review/) on
+PacBio HiFi, with reads carried in the portal itself. Each picture opens its
+card live.
 
-![A breakend card: the tumor's split reads arc between the two ends, the normal below has none](docs/review-cards.png)
-
-The same callset as a table, ordered by the caller's allele fraction.
-
-![The callset as a table, one row per record](docs/review-table.png)
-
-[COLO829 coding variants](https://jbrowse.org/demos/colo829_snv_review/): _BRAF_
-V600E, written `p.Val640Glu` on the MANE transcript, with the ALT base in 64 of
-88 tumor reads and none of the normal's.
-
-![The BRAF V600E card: the ALT base stacked in the tumor's reads, absent from the normal's](docs/review-snv.png)
-
-[HG008-T somatic SVs](https://jbrowse.org/demos/hg008_review/) is a third hosted
-portal, PacBio HiFi, with reads carried in the portal itself.
+<table>
+<tr><td width="25%"><a href="https://jbrowse.org/demos/hg008_review/#card=event%3Acluster_6"><img src="docs/gallery/complex-event.png" alt="A caller's event card: five records over ten loci on chr19, drawn as stacked panels with split reads arcing between them, 242 in the tumor and none in the normal" width="100%"></a><br>A ten-locus rearrangement on chr19</td><td width="25%"><a href="https://jbrowse.org/demos/hg008_review/#card=105"><img src="docs/gallery/translocation.png" alt="A balanced translocation card: 114 tumor split reads arc from chr3 down to chr11, the matched normal below has none, and the verdict is set to Real" width="100%"></a><br>A balanced chr3–chr11 translocation</td><td width="25%"><a href="https://jbrowse.org/demos/colo829_review/#card=297"><img src="docs/gallery/gene-fusion.png" alt="A breakend card annotated as an LRRC3B gene fusion with HIGH impact: 59 tumor split reads join the two ends, none in the normal" width="100%"></a><br>An LRRC3B gene fusion</td><td width="25%"><a href="https://jbrowse.org/demos/colo829_review/#card=366"><img src="docs/gallery/deletion-pten.png" alt="A 12 kb deletion card through PTEN, annotated exon loss with HIGH impact: the tumor's coverage drops between the breakpoints, with 7 split and 33 gapped reads of 34, the normal none" width="100%"></a><br>A 12 kb deletion through PTEN</td></tr>
+<tr><td width="25%"><a href="https://jbrowse.org/demos/hg008_review/#card=204"><img src="docs/gallery/large-deletion.png" alt="A 6.3 Mb deletion card on chr13: both breakpoints in one picture, joined by 53 tumor split reads, the normal's coverage unbroken" width="100%"></a><br>A 6.3 Mb deletion on chr13</td><td width="25%"><a href="https://jbrowse.org/demos/colo829_review/#card=385"><img src="docs/gallery/insertion.png" alt="A 99 bp insertion card: the inserted sequence stacked in 56 of 58 tumor reads and in none of the normal's 53" width="100%"></a><br>A 99 bp insertion</td><td width="25%"><a href="https://jbrowse.org/demos/colo829_snv_review/#card=219"><img src="docs/gallery/braf.png" alt="The BRAF V600E card, written p.Val640Glu on the MANE transcript, with its ClinVar significance: the ALT base stacked in 64 of 88 tumor reads and absent from the normal's 68" width="100%"></a><br>BRAF V600E, called and annotated</td><td width="25%"><a href="https://jbrowse.org/demos/colo829_review/#sort=format%3AAF&view=table"><img src="docs/gallery/table.png" alt="The COLO829 SV callset as a table ordered by allele fraction, one section per class, one line per call, with genes, impact, position, size, tumor and normal reads, filter and verdict" width="100%"></a><br>The callset as a table</td></tr>
+</table>
 
 ## Documentation
 
@@ -60,7 +53,7 @@ portal, PacBio HiFi, with reads carried in the portal itself.
 - [Carrying the reads](docs/carrying-the-reads.md): `variant-review-slice`, for
   links that open sliced reads
 
-[DEVELOPMENT.md](DEVELOPMENT.md) covers tests and rebuilding the screenshots.
+[DEVELOPMENT.md](DEVELOPMENT.md) covers tests and rebuilding the gallery.
 
 ## See also
 
