@@ -35,18 +35,18 @@
     "format:check": "oxfmt --check"
   },
   "dependencies": {
-    "@gmod/vcf": "^7.2.0",
+    "@gmod/vcf": "^7.4.0",
     "esbuild": "^0.28.2",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "oxfmt": "^0.77.0",
-    "oxlint": "^1.92.0",
-    "puppeteer": "^25.11.0",
-    "tsrs": "0.23.0-ts7.1.0-beta"
+    "oxfmt": "^0.79.0",
+    "oxlint": "^1.94.0",
+    "puppeteer": "^25.18.1",
+    "tsrs": "7.1.0-beta.tsrs3"
   }
 }
