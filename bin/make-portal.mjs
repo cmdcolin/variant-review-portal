@@ -5,7 +5,6 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
-import zlib from 'node:zlib'
 
 import {
   buildCards,
@@ -14,10 +13,20 @@ import {
   liveLink,
   parseManifest,
   parseSupport,
+  readVcf,
   SUPPORT,
   supportChoices,
 } from '../lib/cards.mjs'
+import { readVcfText } from '../lib/files.mjs'
 import { renderPage } from '../lib/page.mjs'
+import { VERDICTS } from '../lib/review.mjs'
+import {
+  parseTransmission,
+  readTrio,
+  TRIO_CLASSES,
+  TRIO_SUPPORT,
+  trioVerdicts,
+} from '../lib/trio.mjs'
 
 const HELP = `Usage: variant-review-portal --vcf <file> --images <tracks>=<dir> --support <keys> --out <dir>
 
@@ -43,15 +52,26 @@ Options:
               first directory's rows are the cards
   --out       directory to write the portal to
   --title     page heading (default: the VCF's file name)
-  --support   required: the FORMAT keys the caller counts supporting reads
-              under, the sample's first and its controls' after, to group the
-              queue on: AD,NAD for nanomonsv, TUMOR:DV,NORMAL:DV for a
+  --support   required but for a trio queue: the FORMAT keys the caller
+              counts supporting reads under, the sample's first and its
+              controls' after, to group the queue on: AD,NAD for nanomonsv, TUMOR:DV,NORMAL:DV for a
               two-sample Sniffles VCF. A key alone reads the first sample
               column. jb2export groups on the reads jb2export counted instead,
               for a VCF that counts none
   --facet     an INFO key to print on every card and filter the queue on, such
               as CLNSIG or SUBCLONAL; repeat or separate with commas. FILTER is
               one already when the callset has more than one
+
+  A trio queue, from variant-review-trio-sites (docs/trio-review.md):
+  --pedigree      the pedigree that names the trio: a PLINK .fam or .ped, or
+                  a table whose header names SampleID or IID. --images then
+                  names each alignments track by its VCF sample, the child's
+                  first, and the queue groups on the reads of the allele in
+                  neither parent, so --support is left out
+  --child         the child whose trio to review, where the VCF holds several
+  --transmission  a JSON list of { refName, sex, from } entries for sex
+                  chromosomes and organelles, as the assembly's transmission
+                  slot writes them; refName is the VCF's CHROM
 
   A link on every card, given both. It opens the view the image was drawn in,
   which the manifest's spec column holds:
@@ -65,14 +85,6 @@ function fail(message) {
   process.exit(1)
 }
 
-// bgzip is gzip: the magic bytes decide, not the extension
-function readMaybeGzip(file) {
-  const buf = fs.readFileSync(file)
-  return (
-    buf[0] === 0x1f && buf[1] === 0x8b ? zlib.gunzipSync(buf) : buf
-  ).toString('utf8')
-}
-
 const { values } = parseArgs({
   options: {
     vcf: { type: 'string' },
@@ -81,6 +93,9 @@ const { values } = parseArgs({
     title: { type: 'string' },
     facet: { type: 'string', multiple: true },
     support: { type: 'string' },
+    pedigree: { type: 'string' },
+    child: { type: 'string' },
+    transmission: { type: 'string' },
     jbrowse: { type: 'string' },
     config: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
@@ -135,8 +150,42 @@ if (link && !sets[0].rows.some(r => r.spec)) {
   )
 }
 
-const vcfText = readMaybeGzip(vcf)
-if (!values.support) {
+const vcfText = readVcfText(vcf)
+
+function trioOptions() {
+  if (values.support) {
+    throw new Error(
+      '--support does not apply with --pedigree: a trio queue groups on the reads jb2export counted of the allele in neither parent',
+    )
+  }
+  const { trio, members } = readTrio({
+    pedigreeText: fs.readFileSync(values.pedigree, 'utf8'),
+    samples: readVcf(vcfText).samples,
+    child: values.child,
+  })
+  const named = members.map(m => m.sample)
+  const stray = labels.filter(l => !named.includes(l))
+  if (stray.length) {
+    throw new Error(
+      `--images names ${stray.join(', ')}, which is no sample of the trio: name each alignments track by its sample, ${named.join(', ')}`,
+    )
+  }
+  return {
+    trio,
+    members,
+    transmission: values.transmission
+      ? parseTransmission(fs.readFileSync(values.transmission, 'utf8'))
+      : [],
+  }
+}
+
+let trio
+try {
+  trio = values.pedigree ? trioOptions() : undefined
+} catch (error) {
+  fail(error.message)
+}
+if (!trio && !values.support) {
   const { samples, keys } = supportChoices(vcfText)
   fail(
     [
@@ -147,14 +196,15 @@ if (!values.support) {
     ].join('\n'),
   )
 }
-const fromImages = values.support === 'jb2export'
+const fromImages = !trio && values.support === 'jb2export'
 let cards
 try {
   cards = buildCards({
     vcfText,
     sets,
     link,
-    support: fromImages ? [] : parseSupport(values.support),
+    support: trio || fromImages ? [] : parseSupport(values.support),
+    trio,
     facets: [
       'FILTER',
       ...(values.facet ?? []).flatMap(f => f.split(',')).filter(Boolean),
@@ -216,6 +266,7 @@ function facetOptions(cardList) {
 const title = values.title ?? path.basename(vcf)
 const records = cards.filter(c => c.kind === 'record').length
 const events = cards.length - records
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
 const data = {
   // verdicts are stored under this, so a portal rebuilt from the same callset
   // keeps its review and one built from another never inherits it
@@ -225,14 +276,18 @@ const data = {
     .digest('hex')
     .slice(0, 12),
   title,
-  eyebrow: `${records} record${records === 1 ? '' : 's'}${
-    events ? `, ${events} event${events === 1 ? '' : 's'}` : ''
-  } · ${labels.join(' and ')}`,
-  classes: CLASSES,
-  support: SUPPORT,
-  supportFrom: fromImages
-    ? 'the reads jb2export counted'
-    : `the caller's ${values.support.replaceAll(',', ', ')}`,
+  eyebrow: trio
+    ? `${plural(records, 'site')} · ${trio.members.map(m => `${m.sample} (${m.relationship})`).join(', ')}`
+    : `${plural(records, 'record')}${events ? `, ${plural(events, 'event')}` : ''} · ${labels.join(' and ')}`,
+  classes: trio ? TRIO_CLASSES : CLASSES,
+  support: trio ? TRIO_SUPPORT : SUPPORT,
+  supportFrom: trio
+    ? 'the reads jb2export counted of the allele in neither parent'
+    : fromImages
+      ? 'the reads jb2export counted'
+      : `the caller's ${values.support.replaceAll(',', ', ')}`,
+  verdicts: trio ? trioVerdicts(trio.members) : VERDICTS,
+  trio: trio ? { members: trio.members } : undefined,
   facets: facetOptions(cards),
   describe: describeKeys(vcfText, cards),
   cards,

@@ -17,7 +17,8 @@
   "type": "module",
   "bin": {
     "variant-review-portal": "./bin/make-portal.mjs",
-    "variant-review-slice": "./bin/slice-reads.mjs"
+    "variant-review-slice": "./bin/slice-reads.mjs",
+    "variant-review-trio-sites": "./bin/trio-sites.mjs"
   },
   "files": [
     "bin",

@@ -22,12 +22,6 @@ import {
   VERDICTS,
 } from './review.mjs'
 
-const VERDICT_FILTERS = [
-  ['all', 'Any verdict'],
-  ['unreviewed', 'Unreviewed'],
-  ...VERDICTS.map(b => [b.v, b.label]),
-]
-
 const IMPACTS = ['HIGH', 'MODERATE', 'LOW', 'MODIFIER']
 const GENES_SHOWN = 4
 
@@ -116,9 +110,49 @@ function Fields({ rows, descriptions }) {
   )
 }
 
+function Count({ count }) {
+  return count ? (
+    <span className="count-reads" data-zero={!count.reads}>
+      {count.bases} {count.reads}
+      <span className="dim">/{count.depth}</span>
+    </span>
+  ) : null
+}
+
+function TrioCalls({ card, describe }) {
+  return (
+    <div className="trio">
+      {card.trio.why ? <p className="why">{card.trio.why}</p> : null}
+      <table>
+        <tbody>
+          {card.trio.members.map(m => (
+            <tr key={m.sample} data-role={m.role}>
+              <th scope="row">
+                {m.sample} <span className="rel">({m.relationship})</span>
+              </th>
+              <td className="gt">{m.gt}</td>
+              <td className="n">
+                <Count count={m.count} />
+              </td>
+              <td className="fields-inline">
+                {m.fields.map(([key, value]) => (
+                  <span key={key} title={describe.FORMAT[key]}>
+                    {key} <i>{`${value}`}</i>
+                  </span>
+                ))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 const Card = React.memo(function Card({
   card,
   label,
+  choices,
   describe,
   verdict,
   note,
@@ -181,7 +215,9 @@ const Card = React.memo(function Card({
           {[...facts(card), card.locs.join(' ↔ ')].join(' · ')}
         </span>
       </div>
-      {card.lanes.some(l => l.reads !== undefined) || card.samples.length ? (
+      {card.trio ? (
+        <TrioCalls card={card} describe={describe} />
+      ) : card.lanes.some(l => l.reads !== undefined) || card.samples.length ? (
         <div className="evidence">
           <Lanes lanes={card.lanes} />
           {card.samples.map(s => (
@@ -235,11 +271,13 @@ const Card = React.memo(function Card({
       ) : null}
       <div className="card-foot">
         <div className="verdicts">
-          {VERDICTS.map(b => (
+          {choices.map(b => (
             <button
               key={b.v}
               type="button"
               data-v={b.v}
+              data-tone={b.tone}
+              title={b.title}
               aria-pressed={verdict === b.v}
               onClick={() => {
                 onPick(card.id)
@@ -328,6 +366,8 @@ function Reads({ lane }) {
 function Table({
   cards,
   classes,
+  choices,
+  trio,
   describe,
   lanes,
   verdicts,
@@ -403,7 +443,25 @@ function Table({
       has: card => card.size !== undefined,
       cell: card => sizeLabel(card.size),
     },
-    ...lanes.map(label => ({
+    ...(trio?.members ?? []).map((member, i) => ({
+      key: `member:${member.sample}`,
+      head: (
+        <>
+          {member.sample} <span className="rel">({member.relationship})</span>
+        </>
+      ),
+      headTitle: `${member.sample}'s GT, and the reads jb2export counted with the allele named of those covering the site`,
+      className: 'member',
+      cell: card => {
+        const m = card.trio?.members[i]
+        return m ? (
+          <>
+            <span className="gt">{m.gt}</span> <Count count={m.count} />
+          </>
+        ) : null
+      },
+    })),
+    ...(trio ? [] : lanes).map(label => ({
       key: `lane:${label}`,
       head: label,
       headTitle:
@@ -432,12 +490,14 @@ function Table({
     {
       key: 'verdict',
       head: 'Verdict',
-      cell: card =>
-        verdicts[card.id] ? (
-          <span className="verdict" data-v={verdicts[card.id]}>
-            {VERDICTS.find(b => b.v === verdicts[card.id])?.label}
+      cell: card => {
+        const b = choices.find(c => c.v === verdicts[card.id])
+        return b ? (
+          <span className="verdict" data-tone={b.tone}>
+            {b.label}
           </span>
-        ) : null,
+        ) : null
+      },
     },
     {
       key: 'note',
@@ -449,6 +509,15 @@ function Table({
   ].filter(col => !col.has || cards.some(col.has))
   return (
     <table className="index">
+      {trio ? (
+        <caption>
+          Each member's GT, then the reads with the allele named of those
+          covering the site:{' '}
+          <b>
+            G 9<span className="dim">/20</span>
+          </b>
+        </caption>
+      ) : null}
       {columns.some(col => col.key.startsWith('lane:')) ? (
         <caption>
           Reads per track: <b>13</b> split reads joining the loci,{' '}
@@ -517,6 +586,7 @@ function Table({
 }
 
 export function App({ data }) {
+  const choices = data.verdicts ?? VERDICTS
   // Verdicts, notes and the filters in the address start empty on both sides of
   // hydration and arrive on mount: the server has no way to know them, and
   // rendering a guess is a mismatch.
@@ -636,10 +706,10 @@ export function App({ data }) {
       : sorted
   }, [data.cards, data.classes, filter, verdicts, sort, view])
   const counts = useMemo(
-    () => tallyVerdicts(data.cards, verdicts),
-    [data.cards, verdicts],
+    () => tallyVerdicts(data.cards, verdicts, choices),
+    [data.cards, verdicts, choices],
   )
-  const done = VERDICTS.reduce((n, b) => n + counts[b.v], 0)
+  const done = choices.reduce((n, b) => n + counts[b.v], 0)
   const pending = useMemo(
     () => unexported(data.cards, { verdicts, notes }, exported),
     [data.cards, verdicts, notes, exported],
@@ -787,7 +857,7 @@ export function App({ data }) {
         act()
         return
       }
-      const hit = VERDICTS.find(b => b.key === e.key)
+      const hit = choices.find(b => b.key === e.key)
       const id = here ?? visible[0]?.id
       if (!hit || !id) {
         return
@@ -803,7 +873,7 @@ export function App({ data }) {
     return () => {
       document.removeEventListener('keydown', onKey)
     }
-  }, [move, setVerdict, openCard, visible, cursor, view])
+  }, [move, setVerdict, openCard, visible, cursor, view, choices])
 
   // Changing a filter can strand the cursor on a card that is no longer
   // listed; there is no position to hold on to, so it goes to the top.
@@ -846,6 +916,7 @@ export function App({ data }) {
       const res = fromTsv(
         typeof reader.result === 'string' ? reader.result : '',
         data.cards,
+        choices,
       )
       if (res.error) {
         say(res.error)
@@ -937,16 +1008,16 @@ export function App({ data }) {
               {done} of {data.cards.length} judged
             </span>
             <span id="tally">
-              {VERDICTS.map(
-                b => `${counts[b.v]} ${b.label.toLowerCase()}`,
-              ).join(' · ')}
+              {choices
+                .map(b => `${counts[b.v]} ${b.label.toLowerCase()}`)
+                .join(' · ')}
             </span>
           </div>
           <div className="bar">
-            {VERDICTS.map(b => (
+            {choices.map(b => (
               <span
                 key={b.v}
-                className={`b-${b.v}`}
+                className={`b-${b.tone}`}
                 style={{ width: pct(counts[b.v]) }}
               />
             ))}
@@ -1139,7 +1210,11 @@ export function App({ data }) {
               patchFilter({ verdictFilter: e.target.value })
             }}
           >
-            {VERDICT_FILTERS.map(([v, label]) => (
+            {[
+              ['all', 'Any verdict'],
+              ['unreviewed', 'Unreviewed'],
+              ...choices.map(b => [b.v, b.label]),
+            ].map(([v, label]) => (
               <option key={v} value={v}>
                 {label}
               </option>
@@ -1196,7 +1271,11 @@ export function App({ data }) {
             <kbd>k</kbd> move
           </span>
           <span>
-            <kbd>1</kbd> real <kbd>2</kbd> needs a look <kbd>3</kbd> artifact
+            {choices.map(b => (
+              <React.Fragment key={b.v}>
+                <kbd>{b.key}</kbd> {b.label.toLowerCase()}{' '}
+              </React.Fragment>
+            ))}
           </span>
           <span>
             <kbd>n</kbd> note
@@ -1226,6 +1305,8 @@ export function App({ data }) {
           <Table
             cards={visible}
             classes={data.classes}
+            choices={choices}
+            trio={data.trio}
             describe={data.describe}
             lanes={laneLabels}
             verdicts={verdicts}
@@ -1243,6 +1324,7 @@ export function App({ data }) {
                 key={c.id}
                 card={c}
                 label={data.classes[c.cls]}
+                choices={choices}
                 describe={data.describe}
                 verdict={verdicts[c.id] ?? ''}
                 note={notes[c.id] ?? ''}

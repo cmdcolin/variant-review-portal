@@ -53,6 +53,19 @@
       [data-cls='EVENT'] {
         --cls: light-dark(#0d9488, #5eead4);
       }
+      /* JBrowse's Mendelian check colors */
+      [data-cls='deNovoCandidate'] {
+        --cls: light-dark(#c2185b, #f06292);
+      }
+      [data-cls='mendelianViolation'] {
+        --cls: light-dark(#f57c00, #ffb74d);
+      }
+      [data-cls='consistent'] {
+        --cls: light-dark(#78909c, #b0bec5);
+      }
+      [data-cls='unsettled'] {
+        --cls: GrayText;
+      }
       * {
         box-sizing: border-box;
       }
@@ -120,6 +133,9 @@
       }
       .b-artifact {
         background: var(--artifact);
+      }
+      .b-accent {
+        background: var(--accent);
       }
 
       /* the filters and the actions, on their own line under the title row */
@@ -310,14 +326,61 @@
         background: var(--pill);
         color: var(--on-accent);
       }
-      .verdict[data-v='real'] {
+      .verdict[data-tone='real'] {
         --pill: var(--real);
       }
-      .verdict[data-v='unsure'] {
+      .verdict[data-tone='unsure'] {
         --pill: var(--unsure);
       }
-      .verdict[data-v='artifact'] {
+      .verdict[data-tone='artifact'] {
         --pill: var(--artifact);
+      }
+      .verdict[data-tone='accent'] {
+        --pill: var(--accent);
+      }
+      /* a trio's calls, a member a line, the child's first */
+      .trio {
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      .trio .why {
+        margin: 0 0 4px;
+        font-size: 13px;
+      }
+      .trio table {
+        border-collapse: collapse;
+      }
+      .trio th,
+      .trio td {
+        padding: 1px 16px 1px 0;
+        text-align: left;
+        font-weight: normal;
+        white-space: nowrap;
+      }
+      .trio tr[data-role='child'] th {
+        font-weight: 600;
+      }
+      .trio .n {
+        text-align: right;
+      }
+      .rel,
+      .dim,
+      .fields-inline {
+        color: GrayText;
+      }
+      .gt,
+      .fields-inline {
+        font-family: ui-monospace, monospace;
+      }
+      .fields-inline span {
+        margin-right: 10px;
+      }
+      .fields-inline i {
+        font-style: normal;
+        color: CanvasText;
+      }
+      .count-reads[data-zero='true'] {
+        color: GrayText;
       }
       /* what was counted off the picture, then what the caller wrote */
       .evidence {
@@ -452,14 +515,17 @@
         display: flex;
         gap: 6px;
       }
-      .verdicts button[data-v='real'] {
+      .verdicts button[data-tone='real'] {
         --cls: var(--real);
       }
-      .verdicts button[data-v='unsure'] {
+      .verdicts button[data-tone='unsure'] {
         --cls: var(--unsure);
       }
-      .verdicts button[data-v='artifact'] {
+      .verdicts button[data-tone='artifact'] {
         --cls: var(--artifact);
+      }
+      .verdicts button[data-tone='accent'] {
+        --cls: var(--accent);
       }
       input.note {
         flex: 1;
@@ -533,8 +599,10 @@
       .index .n {
         text-align: right;
       }
-      .index .dim {
-        color: GrayText;
+      .index thead .rel {
+        text-transform: none;
+        letter-spacing: normal;
+        font-weight: normal;
       }
       .index tbody tr:not(.group) {
         cursor: pointer;
