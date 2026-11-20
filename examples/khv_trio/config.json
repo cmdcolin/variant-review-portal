@@ -1,0 +1,166 @@
+{
+  "assemblies": [
+    {
+      "name": "hg38",
+      "aliases": ["GRCh38"],
+      "sequence": {
+        "type": "ReferenceSequenceTrack",
+        "trackId": "hg38-ReferenceSequenceTrack",
+        "adapter": {
+          "type": "BgzipFastaAdapter",
+          "fastaLocation": {
+            "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz",
+            "locationType": "UriLocation"
+          },
+          "faiLocation": {
+            "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz.fai",
+            "locationType": "UriLocation"
+          },
+          "gziLocation": {
+            "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz.gzi",
+            "locationType": "UriLocation"
+          }
+        }
+      },
+      "refNameAliases": {
+        "adapter": {
+          "type": "RefNameAliasAdapter",
+          "location": {
+            "uri": "https://s3.amazonaws.com/jbrowse.org/genomes/GRCh38/hg38_aliases.txt",
+            "locationType": "UriLocation"
+          }
+        }
+      },
+      "transmission": [
+        {
+          "refName": "chrX",
+          "sex": "male",
+          "from": "mother"
+        },
+        {
+          "refName": "chrY",
+          "sex": "male",
+          "from": "father"
+        },
+        {
+          "refName": "chrM",
+          "from": "either"
+        }
+      ]
+    }
+  ],
+  "tracks": [
+    {
+      "type": "FeatureTrack",
+      "trackId": "ncbi_refseq_109_hg38_latest",
+      "name": "NCBI RefSeq genes",
+      "assemblyNames": ["hg38"],
+      "adapter": {
+        "type": "Gff3TabixAdapter",
+        "gffGzLocation": {
+          "uri": "https://s3.amazonaws.com/jbrowse.org/genomes/GRCh38/ncbi_refseq/GRCh38_latest_genomic.sort.gff.gz",
+          "locationType": "UriLocation"
+        },
+        "index": {
+          "location": {
+            "uri": "https://s3.amazonaws.com/jbrowse.org/genomes/GRCh38/ncbi_refseq/GRCh38_latest_genomic.sort.gff.gz.tbi",
+            "locationType": "UriLocation"
+          }
+        }
+      },
+      "displays": [
+        {
+          "type": "LinearBasicDisplay",
+          "displayId": "ncbi_refseq_109_hg38_latest-LinearBasicDisplay",
+          "filter": ["geneLike"]
+        }
+      ]
+    },
+    {
+      "type": "VariantTrack",
+      "trackId": "khv_trio_calls",
+      "name": "KHV trio phased calls (chr1)",
+      "assemblyNames": ["hg38"],
+      "adapter": {
+        "type": "VcfTabixAdapter",
+        "vcfGzLocation": {
+          "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1.vcf.gz",
+          "locationType": "UriLocation"
+        },
+        "index": {
+          "location": {
+            "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1.vcf.gz.tbi",
+            "locationType": "UriLocation"
+          },
+          "indexType": "TBI"
+        },
+        "pedigreeLocation": {
+          "uri": "https://jbrowse.org/demos/kgp-trio/20130606_g1k_3202_samples_ped_population.txt",
+          "locationType": "UriLocation"
+        }
+      },
+      "displays": [
+        {
+          "type": "LinearVariantDisplay",
+          "displayId": "khv_trio_calls-LinearVariantDisplay",
+          "encoding": {
+            "color": {
+              "field": "mendelian"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "AlignmentsTrack",
+      "trackId": "HG02024_cram",
+      "name": "HG02024 (daughter) 30x reads",
+      "assemblyNames": ["hg38"],
+      "adapter": {
+        "type": "CramAdapter",
+        "cramLocation": {
+          "uri": "https://1000genomes.s3.amazonaws.com/1000G_2504_high_coverage/additional_698_related/data/ERR3988976/HG02024.final.cram",
+          "locationType": "UriLocation"
+        },
+        "craiLocation": {
+          "uri": "https://1000genomes.s3.amazonaws.com/1000G_2504_high_coverage/additional_698_related/data/ERR3988976/HG02024.final.cram.crai",
+          "locationType": "UriLocation"
+        }
+      }
+    },
+    {
+      "type": "AlignmentsTrack",
+      "trackId": "HG02026_cram",
+      "name": "HG02026 (father) 30x reads",
+      "assemblyNames": ["hg38"],
+      "adapter": {
+        "type": "CramAdapter",
+        "cramLocation": {
+          "uri": "https://1000genomes.s3.amazonaws.com/1000G_2504_high_coverage/data/ERR3242041/HG02026.final.cram",
+          "locationType": "UriLocation"
+        },
+        "craiLocation": {
+          "uri": "https://1000genomes.s3.amazonaws.com/1000G_2504_high_coverage/data/ERR3242041/HG02026.final.cram.crai",
+          "locationType": "UriLocation"
+        }
+      }
+    },
+    {
+      "type": "AlignmentsTrack",
+      "trackId": "HG02025_cram",
+      "name": "HG02025 (mother) 30x reads",
+      "assemblyNames": ["hg38"],
+      "adapter": {
+        "type": "CramAdapter",
+        "cramLocation": {
+          "uri": "https://1000genomes.s3.amazonaws.com/1000G_2504_high_coverage/data/ERR3242042/HG02025.final.cram",
+          "locationType": "UriLocation"
+        },
+        "craiLocation": {
+          "uri": "https://1000genomes.s3.amazonaws.com/1000G_2504_high_coverage/data/ERR3242042/HG02025.final.cram.crai",
+          "locationType": "UriLocation"
+        }
+      }
+    }
+  ]
+}
