@@ -51,6 +51,33 @@ test('a headerless PLINK .fam is read by position, and FID_IID names a sample', 
   })
 })
 
+test('a tab-separated line keeps an empty cell in its column', () => {
+  const tsv = ['FamilyID\tSampleID\tFatherID\tMotherID\tSex', '\tkid\t\tmom\t1']
+  assert.deepEqual(parsePedigree(tsv.join('\n'), ['kid', 'mom']).get('kid'), {
+    father: undefined,
+    mother: 'mom',
+    sex: 'male',
+  })
+})
+
+test('a trailing tab leaves a space-separated line read by its spaces', () => {
+  assert.deepEqual(
+    parsePedigree('f1 kid dad mom 2 1\t', ['kid', 'dad']).get('kid'),
+    { father: 'dad', mother: 'mom', sex: 'female' },
+  )
+})
+
+test('a parent of NA or -9 is no parent, unless a sample has that name', () => {
+  assert.deepEqual(
+    parsePedigree('f1 kid NA -9 1 1', ['kid', 'NA']).get('kid'),
+    {
+      father: 'NA',
+      mother: undefined,
+      sex: 'male',
+    },
+  )
+})
+
 test('a sample naming itself a parent loses that parent', () => {
   const pedigree = parsePedigree('f a a b 0 0', ['a', 'b'])
   assert.deepEqual(pedigree.get('a'), {

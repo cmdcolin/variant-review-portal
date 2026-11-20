@@ -38,8 +38,10 @@ colors need a `jb2export` newer than 5.0.0-beta.22.
   whose header names `SampleID` or `IID`, `FatherID` or `PAT`, `MotherID` or
   `MAT` and `Sex`, as 1000 Genomes'
   `20130606_g1k_3202_samples_ped_population.txt` does. The columns are found
-  from the first row, never the extension. A parent of `0` is unknown, and sex
-  `1` is male, `2` female, `0` or `-9` missing and anything else `other`.
+  from the first row, never the extension. A line holding a tab is split on
+  tabs, so an empty cell keeps its column. A parent or sex of `0`, `-9`, `NA`,
+  `unknown` or an empty cell is missing, and sex `1` is male, `2` female and
+  anything else `other`.
 - **The trio** is the child among the VCF's samples whose father or mother is
   among them too. A VCF holding more than one takes `--child` to pick it. A
   child with one parent in the VCF is a duo, and one whose father and mother are
