@@ -3,7 +3,9 @@
 Turn the images `jb2export batch` renders from a VCF into a **static review
 portal**: one card per record, the sample and its control in one image, what the
 VCF says about the call, a verdict, and a link that opens the same loci live in
-JBrowse. It handles structural variants and small variants alike.
+JBrowse. It handles structural variants and small variants alike, and a trio's
+de novo candidates and Mendelian violations with the child's and both parents'
+reads.
 
 A caller returns hundreds of variants and a VCF says nothing about which are
 real. The reads do, and a picture of them per call is a queue a person can
@@ -25,18 +27,19 @@ npx serve portal
 git clone https://github.com/cmdcolin/variant-review-portal
 cd variant-review-portal
 pnpm install
-npm link                     # variant-review-portal and variant-review-slice
+npm link                     # variant-review-portal, -slice and -trio-sites
 npm i -g @jbrowse/img@next   # jb2export
 ```
 
 ## Gallery
 
-Three hosted portals:
+Four hosted portals:
 [COLO829 somatic SVs](https://jbrowse.org/demos/colo829_review/) and
 [COLO829 coding variants](https://jbrowse.org/demos/colo829_snv_review/) on ONT
-reads, and [HG008-T somatic SVs](https://jbrowse.org/demos/hg008_review/) on
-PacBio HiFi, with reads carried in the portal itself. Each picture opens its
-card live.
+reads, [HG008-T somatic SVs](https://jbrowse.org/demos/hg008_review/) on PacBio
+HiFi, with reads carried in the portal itself, and the
+[1000 Genomes KHV trio](https://jbrowse.org/demos/khv_trio_review/) over
+chr1:190-200 Mb on 30x Illumina. Each picture opens its card live.
 
 <table>
 <tr><td width="50%"><a href="https://jbrowse.org/demos/hg008_review/#card=event%3Acluster_12"><img src="docs/gallery/complex-event.png" alt="A caller's event card on chr17: two records over four loci, a tandem duplication and an inversion whose arcs interleave across one picture, joined by 128 tumor split reads and none in the normal" width="100%"></a><br>A duplication and an inversion, interleaved on chr17</td><td width="50%"><a href="https://jbrowse.org/demos/hg008_review/#card=115"><img src="docs/gallery/inversion.png" alt="An inversion card joining chr5 at 20 Mb to chr5 at 156 Mb: one arc of 113 tumor split reads between the two ends, none in the normal, and the verdict set to Real" width="100%"></a><br>An inversion across 136 Mb of chr5</td></tr>
@@ -54,6 +57,8 @@ card live.
 - [Reviewing](docs/reviewing.md): keys, the table, export and import
 - [Carrying the reads](docs/carrying-the-reads.md): `variant-review-slice`, for
   links that open sliced reads
+- [Reviewing a trio](docs/trio-review.md): `--pedigree` and
+  `variant-review-trio-sites`, a queue of the sites the Mendelian check flags
 
 [DEVELOPMENT.md](DEVELOPMENT.md) covers tests and rebuilding the gallery.
 

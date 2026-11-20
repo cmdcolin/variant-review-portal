@@ -8,19 +8,28 @@ portal draws the three in one picture a site, so the queue can be finished.
 ```bash
 # the sites the Mendelian check flags, de novo candidates and Mendelian
 # violations, as a VCF jb2export can render
-variant-review-trio-sites --vcf trio.vcf.gz --pedigree family.ped \
-  --region chr1:190000000-200000000 --out sites.vcf
+variant-review-trio-sites --vcf HG02024_VN049_KHVTrio.chr1.vcf.gz \
+  --pedigree 20130606_g1k_3202_samples_ped_population.txt \
+  --region 1:190000000-200000000 --out sites.vcf
 
-# the child's reads first, then the parents', in one image a site
-jb2export batch --sites sites.vcf --config config.json --assembly hg38 \
-  --track trio_calls height:60 --track child_reads height:180 \
-  --track father_reads height:180 --track mother_reads height:180 \
+# the calls, then the child's reads and the parents', in one image a site
+jb2export batch --sites sites.vcf --config examples/khv_trio/config.json \
+  --assembly hg38 --track ncbi_refseq_109_hg38_latest height:50 \
+  --track khv_trio_calls height:70 --track HG02024_cram height:200 \
+  --track HG02026_cram height:200 --track HG02025_cram height:200 \
   --flank 75 --outDir reads --manifest
 
 # name each alignments track by its sample, in track order
-variant-review-portal --vcf sites.vcf --pedigree family.ped \
+variant-review-portal --vcf sites.vcf \
+  --pedigree 20130606_g1k_3202_samples_ped_population.txt \
   --images HG02024,HG02026,HG02025=reads --out portal
 ```
+
+[`examples/khv_trio/config.json`](../examples/khv_trio/config.json) is the
+config: the 1000 Genomes trio's phased chr1 calls with the pedigree, colored by
+the Mendelian check, and each member's 30x CRAM from the project's bucket, named
+by sample and relationship. The calls track's relationship labels and Mendelian
+colors need a `jb2export` newer than 5.0.0-beta.22.
 
 ## Input
 
@@ -51,7 +60,7 @@ variant-review-portal --vcf sites.vcf --pedigree family.ped \
 Both commands run JBrowse's `classifyTrio` (ADR-279 in jbrowse-components), the
 one rule the variant track colors by: any ploidy, read from the genotype; a duo
 the known parent cannot settle is no call; `either`, polyploid and aneuploid
-splits never report a violation. Phase is ignored.
+splits never report a violation. The check ignores phase.
 
 `@jbrowse/plugin-variants` 5.0.0-beta.22, the latest published, predates the
 check and exports no subpath for it, so `lib/vendor/classifyTrio.ts` is a copy,
@@ -62,9 +71,10 @@ published package exports the file (see [DEVELOPMENT.md](../DEVELOPMENT.md)).
 
 `variant-review-trio-sites` writes the records whose class is in `--classes`,
 `deNovoCandidate,mendelianViolation` by default, in the VCF's order and with its
-header, so the file is still a VCF for `jb2export` and the portal. Add
-`consistent` for a sample of the sites that pass. The portal orders the cards de
-novo candidates first, then Mendelian violations, each in position order.
+header, so the file is still a VCF for `jb2export` and the portal. `consistent`
+and `unsettled` (a no-call leaves the check open) are the other classes. The
+portal orders the cards de novo candidates first, then Mendelian violations,
+each in position order.
 
 ## A card
 
@@ -84,16 +94,19 @@ novo candidates first, then Mendelian violations, each in position order.
 
 ## The reads say
 
-Where the count is of the allele in neither parent (an ALT, or the REF of a
-biallelic site, counted as the reads without the ALT), the support filter sorts
-the de novo candidates three ways:
+For a substitution whose allele in neither parent is its ALT, or the REF of a
+site with one ALT (counted as the reads without the ALT), the support filter
+sorts the de novo candidates three ways:
 
-- **no read in the child has it**: a child miscall, most likely;
-- **a parent's reads have it too**: a parental allele the calls missed;
-- **only the child's reads have it**: the candidates left standing.
+- **no read in the child has it**: a child miscall, most likely
+- **a parent's reads have it too**: a parental allele the calls missed, or one
+  stray read
+- **only the child's reads have it**: the candidates left standing
 
-A Mendelian violation has no allele in neither parent and stays uncounted. The
-picture decides a card; the grouping orders the queue.
+An indel stays uncounted: an aligner often places it a few bases from the
+record's column, where the count misses it. So does a Mendelian violation, which
+has no allele in neither parent. The picture decides a card; the grouping orders
+the queue.
 
 ## The table and the TSV
 
@@ -101,3 +114,21 @@ The table is sectioned by class, with each member's `GT` and read count in a
 column named by its sample. Export adds `trio_class` and `genotypes`
 (`HG02024=0|1;HG02026=0|0;HG02025=0|0`) to the TSV, and Import reads the trio
 verdicts back.
+
+## The KHV trio
+
+[jbrowse.org/demos/khv_trio_review](https://jbrowse.org/demos/khv_trio_review/)
+is the run above: 91 de novo candidates and 82 Mendelian violations over
+chr1:190-200 Mb, rendered with `--jobs 4` in about 30 seconds from the bucket.
+
+- **The Mendelian violations** are mostly the CFHR1 deletion: at 69 sites from
+  196,807,156 to 196,835,670 the father is `1|1` on about half his depth and the
+  daughter `0|0` on about half hers, a one-copy sample called homozygous.
+- **The de novo candidates**, a random sample of 30 read by eye:
+  - 8 a missed parental het: the child's allele in a parent's reads at the site
+  - 6 an indel at the site in a parent's reads and the child's, which the call
+    writes as a different allele
+  - 11 a child miscall, the child's reads lacking the allele or homozygous where
+    the call is het
+  - 2 in the child's reads alone (chr1:193,838,143 and chr1:195,271,263)
+  - 3 unclear, a parent with one read of the allele or a repeat

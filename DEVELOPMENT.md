@@ -36,3 +36,24 @@ node docs/shoot.mjs sv=https://jbrowse.org/demos/colo829_review/ \
 A card shot is cropped to the card under the cursor; the table shot is the whole
 window. The SV portal is 135 records over the ONT open-data reads, rendered from
 the public bucket in under five minutes.
+
+## The vendored classifier
+
+`lib/vendor/classifyTrio.ts` and `test/vendor/classifyTrio.test.ts` are
+jbrowse-components' `plugins/variants/src/shared/classifyTrio.ts` and its test,
+the test's import lines aside, so the trio queue and JBrowse's variant track
+classify alike. Node strips the file's types, which it does for a checkout and
+not under `node_modules`. `test/vendor/jest.ts` runs the test under `node:test`,
+and lint and format skip both. After a change upstream, copy both again and
+check:
+
+```bash
+diff lib/vendor/classifyTrio.ts \
+  ../jbrowse-components/plugins/variants/src/shared/classifyTrio.ts
+```
+
+The copy goes once a published package exports the file. A subpath of
+`@jbrowse/plugin-variants` (`"./classifyTrio"` in `exports`, built to
+`esm/shared/classifyTrio.js`) is one way, though installing it also installs the
+plugin's dependencies; the file imports nothing, so a package of its own is the
+lighter one.
