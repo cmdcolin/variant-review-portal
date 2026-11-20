@@ -30,23 +30,7 @@
             "locationType": "UriLocation"
           }
         }
-      },
-      "transmission": [
-        {
-          "refName": "chrX",
-          "sex": "male",
-          "from": "mother"
-        },
-        {
-          "refName": "chrY",
-          "sex": "male",
-          "from": "father"
-        },
-        {
-          "refName": "chrM",
-          "from": "either"
-        }
-      ]
+      }
     }
   ],
   "tracks": [
@@ -84,12 +68,12 @@
       "adapter": {
         "type": "VcfTabixAdapter",
         "vcfGzLocation": {
-          "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1.vcf.gz",
+          "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1.merr.vcf.gz",
           "locationType": "UriLocation"
         },
         "index": {
           "location": {
-            "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1.vcf.gz.tbi",
+            "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1.merr.vcf.gz.tbi",
             "locationType": "UriLocation"
           },
           "indexType": "TBI"
@@ -105,7 +89,16 @@
           "displayId": "khv_trio_calls-LinearVariantDisplay",
           "encoding": {
             "color": {
-              "field": "mendelian"
+              "field": "INFO.MERR",
+              "scale": {
+                "type": "threshold",
+                "domain": [1],
+                "range": ["#90a4ae", "#c2185b"],
+                "names": ["No Mendelian error", "Mendelian error"]
+              },
+              "legend": {
+                "title": "MERR"
+              }
             }
           }
         }

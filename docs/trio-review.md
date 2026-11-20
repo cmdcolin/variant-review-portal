@@ -27,9 +27,9 @@ variant-review-portal --vcf sites.vcf \
 
 [`examples/khv_trio/config.json`](../examples/khv_trio/config.json) is the
 config: the 1000 Genomes trio's phased chr1 calls with the pedigree, colored by
-the Mendelian check, and each member's 30x CRAM from the project's bucket, named
-by sample and relationship. The calls track's relationship labels and Mendelian
-colors need a `jb2export` newer than 5.0.0-beta.22.
+the `INFO/MERR` that `bcftools +mendelian2 -m a` writes, and each member's 30x
+CRAM from the project's bucket, named by sample and relationship. The calls
+track's relationship labels need a `jb2export` newer than 5.0.0-beta.22.
 
 ## Input
 
