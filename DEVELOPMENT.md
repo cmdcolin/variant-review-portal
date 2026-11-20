@@ -25,12 +25,13 @@ pnpm format
 
 `docs/shoot.mjs` rebuilds the README's gallery in `docs/gallery/`, in light
 mode, from built portals given as directories or hosted URLs and named for the
-callset each holds. The README's are the three hosted portals:
+callset each holds. The README's are the four hosted portals:
 
 ```bash
 node docs/shoot.mjs sv=https://jbrowse.org/demos/colo829_review/ \
   snv=https://jbrowse.org/demos/colo829_snv_review/ \
-  hg008=https://jbrowse.org/demos/hg008_review/
+  hg008=https://jbrowse.org/demos/hg008_review/ \
+  trio=https://jbrowse.org/demos/khv_trio_review/
 ```
 
 A card shot is cropped to the card under the cursor; the table shot is the whole

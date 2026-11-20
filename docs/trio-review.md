@@ -92,6 +92,8 @@ each in position order.
   uniparental disomy, where the calls are right for a one-copy sample), unclear.
   A duo offers the parent it has; a selfed line offers one parent.
 
+[![A de novo candidate card at chr1:193,838,143: the daughter called 1|0 with C in 15 of her 39 reads, both parents 0|0 with C in none of theirs, and the verdict set to Real de novo](gallery/trio-de-novo.png)](https://jbrowse.org/demos/khv_trio_review/#card=66)
+
 ## The reads say
 
 For a substitution whose allele in neither parent is its ALT, or the REF of a
@@ -106,7 +108,10 @@ sorts the de novo candidates three ways:
 An indel stays uncounted: an aligner often places it a few bases from the
 record's column, where the count misses it. So does a Mendelian violation, which
 has no allele in neither parent. The picture decides a card; the grouping orders
-the queue.
+the queue. Here the father is called `0|0`, yet 19 of his 36 reads carry the
+daughter's T:
+
+[![A de novo candidate card at chr1:190,014,025: the daughter 1|0 with T in 18 of 34 reads, the father called 0|0 yet with T in 19 of his 36, and the verdict set to Missed in father](gallery/trio-missed-het.png)](https://jbrowse.org/demos/khv_trio_review/#card=21)
 
 ## The table and the TSV
 
@@ -114,6 +119,8 @@ The table is sectioned by class, with each member's `GT` and read count in a
 column named by its sample. Export adds `trio_class` and `genotypes`
 (`HG02024=0|1;HG02026=0|0;HG02025=0|0`) to the TSV, and Import reads the trio
 verdicts back.
+
+[![The KHV trio portal as a table filtered to the 14 de novo candidates whose allele only the child's reads carry, each with the daughter's, father's and mother's GT and read count](gallery/trio-table.png)](https://jbrowse.org/demos/khv_trio_review/#support=sample&view=table)
 
 ## The KHV trio
 
@@ -132,3 +139,8 @@ chr1:190-200 Mb, rendered with `--jobs 4` in about 30 seconds from the bucket.
     the call is het
   - 2 in the child's reads alone (chr1:193,838,143 and chr1:195,271,263)
   - 3 unclear, a parent with one read of the allele or a repeat
+
+The first of the CFHR1 sites, the father's 15 reads and the daughter's 12
+against the mother's 23:
+
+[![A Mendelian violation card at chr1:196,807,156 in the CFHR1 deletion: the father 1|1 on 15 reads, the daughter 0|0 on 12, and the verdict set to Copy-number change](gallery/trio-copy-number.png)](https://jbrowse.org/demos/khv_trio_review/#card=100)

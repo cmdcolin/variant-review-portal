@@ -1,9 +1,10 @@
 // Rebuild the README's gallery, in light mode, from built portals: each a
 // directory or a hosted URL, named for the callset it holds.
-//   node docs/shoot.mjs sv=<portal> snv=<portal> hg008=<portal>
+//   node docs/shoot.mjs sv=<portal> snv=<portal> hg008=<portal> trio=<portal>
 //   node docs/shoot.mjs sv=https://jbrowse.org/demos/colo829_review/ \
 //     snv=https://jbrowse.org/demos/colo829_snv_review/ \
-//     hg008=https://jbrowse.org/demos/hg008_review/
+//     hg008=https://jbrowse.org/demos/hg008_review/ \
+//     trio=https://jbrowse.org/demos/khv_trio_review/
 // Needs puppeteer resolvable from where it is run, and PUPPETEER_EXECUTABLE_PATH
 // where puppeteer's own download is absent. A shot whose portal is not named
 // is skipped.
@@ -16,7 +17,7 @@ const portals = Object.fromEntries(
 )
 if (!Object.keys(portals).length) {
   console.error(
-    'usage: node docs/shoot.mjs sv=<portal> snv=<portal> hg008=<portal>',
+    'usage: node docs/shoot.mjs sv=<portal> snv=<portal> hg008=<portal> trio=<portal>',
   )
   process.exit(1)
 }
@@ -37,6 +38,16 @@ const SHOTS = [
     keys: ['j', '1', 'j', '3', 'j'],
     page: true,
     height: 1330,
+  },
+  { name: 'trio-de-novo', portal: 'trio', hash: '#card=66', keys: ['1'] },
+  { name: 'trio-missed-het', portal: 'trio', hash: '#card=21', keys: ['2'] },
+  { name: 'trio-copy-number', portal: 'trio', hash: '#card=100', keys: ['5'] },
+  {
+    name: 'trio-table',
+    portal: 'trio',
+    hash: '#support=sample&view=table',
+    page: true,
+    height: 800,
   },
 ].filter(shot => portals[shot.portal])
 
