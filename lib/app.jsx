@@ -406,7 +406,7 @@ function Table({
     },
     {
       key: 'genes',
-      head: 'Genes',
+      head: cards.some(card => card.genes.length) ? 'Genes' : 'Change',
       className: 'gene-cell',
       has: card => card.genes.length > 0 || !!card.change,
       title: card => [...card.genes, ...card.effects].join(', '),
@@ -1009,6 +1009,7 @@ export function App({ data }) {
             </span>
             <span id="tally">
               {choices
+                .filter(b => counts[b.v])
                 .map(b => `${counts[b.v]} ${b.label.toLowerCase()}`)
                 .join(' · ')}
             </span>

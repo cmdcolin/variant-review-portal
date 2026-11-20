@@ -75,6 +75,51 @@ assert.match(unsaid.stderr, /needs --support/)
 assert.match(unsaid.stderr, /--support jb2export/)
 assert.equal(build(['--support', 'jb2export']).status, 0)
 
+// a trio queue: a de novo candidate and a Mendelian violation, each one image
+// of the child's reads over the father's and the mother's
+const trioDir = path.join(dir, 'trio')
+fs.mkdirSync(path.join(trioDir, 'reads'), { recursive: true })
+fs.writeFileSync(path.join(trioDir, 'reads', '1.png'), png)
+fs.writeFileSync(path.join(trioDir, 'reads', '2.png'), png)
+fs.writeFileSync(
+  path.join(trioDir, 'reads', 'manifest.tsv'),
+  [
+    'file\tlocs\tname\tline\tevent\talt\tstatus',
+    '1.png\t1:200-300\t\t5\t\t0/30,30/30,14/28\tok',
+    '2.png\t1:50-150\t\t4\t\t9/20,0/18,6/20\tok',
+  ].join('\n'),
+)
+fs.writeFileSync(
+  path.join(trioDir, 'trio.vcf'),
+  [
+    '##fileformat=VCFv4.2',
+    '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">',
+    '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tkid\tmom\tdad',
+    '1\t100\t.\tA\tG\t.\tPASS\t.\tGT\t0|1\t0|0\t0|0',
+    '1\t250\t.\tC\tT\t.\tPASS\t.\tGT\t0|0\t1|0\t1|1',
+  ].join('\n'),
+)
+fs.writeFileSync(
+  path.join(trioDir, 'family.fam'),
+  ['f kid dad mom 2 0', 'f dad 0 0 1 0', 'f mom 0 0 2 0'].join('\n'),
+)
+const trioBuild = spawnSync(
+  process.execPath,
+  [
+    path.join(import.meta.dirname, '../bin/make-portal.mjs'),
+    '--vcf',
+    path.join(trioDir, 'trio.vcf'),
+    '--pedigree',
+    path.join(trioDir, 'family.fam'),
+    '--images',
+    `kid,dad,mom=${path.join(trioDir, 'reads')}`,
+    '--out',
+    path.join(trioDir, 'portal'),
+  ],
+  { encoding: 'utf8' },
+)
+assert.equal(trioBuild.status, 0, trioBuild.stderr)
+
 const browser = await launch({
   executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
   args: ['--no-sandbox', '--allow-file-access-from-files'],
@@ -151,6 +196,39 @@ try {
   assert.equal(await text('#export'), 'Export')
   await page.reload({ waitUntil: 'networkidle0' })
   assert.equal(await text('#export'), 'Export')
+
+  await page.goto(
+    pathToFileURL(path.join(trioDir, 'portal', 'index.html')).href,
+    { waitUntil: 'networkidle0' },
+  )
+  assert.deepEqual(
+    await page.$$eval('.card', els => els.map(el => el.dataset.cls)),
+    ['deNovoCandidate', 'mendelianViolation'],
+  )
+  assert.match(await text('.card .trio'), /G is in neither parent/)
+  assert.match(
+    await text('.card .trio tbody'),
+    /kid \(daughter\)0\|1G 9\/20dad \(father\)0\|0G 0\/18mom \(mother\)0\|0G 6\/20/,
+  )
+  await page.keyboard.press('j')
+  await page.keyboard.press('3')
+  assert.equal(
+    await page.$eval('.card', el => el.dataset.verdict),
+    'missed:mother',
+  )
+  assert.match(await text('#tally'), /^1 missed in mother$/)
+  await page.select('#sf', 'control')
+  assert.equal(await count('.card'), 1)
+
+  await page.keyboard.press('t')
+  assert.match(
+    await text('.index thead'),
+    /kid \(daughter\).*dad \(father\).*mom \(mother\)/,
+  )
+  assert.match(
+    await text('.index tbody tr:not(.group)'),
+    /0\|1 G 9\/20.*Missed in mother/,
+  )
 
   assert.deepEqual(problems, [])
   console.log('browser test passed')
