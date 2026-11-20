@@ -39,8 +39,8 @@ variant-review-portal --vcf sites.vcf --pedigree family.ped \
   `transmission` slot, `{ "refName", "sex", "from" }`, for the contigs a child
   does not inherit one copy from each parent: sex chromosomes, organelles,
   haplodiploid males. `refName` matches the VCF's `CHROM` exactly. Left out,
-  every contig takes the autosomal rule, which reads a hemizygous male X call
-  as a violation.
+  every contig takes the autosomal rule, which reads a hemizygous male X call as
+  a violation.
 - **The alignments tracks** are one `jb2export batch` run, the child's track
   first. `--images` names each by its VCF sample, so the portal knows whose
   reads each count is. A track left out (a parent with no reads) leaves that
@@ -61,10 +61,10 @@ published package exports the file (see [DEVELOPMENT.md](../DEVELOPMENT.md)).
 ## The queue
 
 `variant-review-trio-sites` writes the records whose class is in `--classes`,
-`deNovoCandidate,mendelianViolation` by default, in the VCF's order and with
-its header, so the file is still a VCF for `jb2export` and the portal. Add
-`consistent` for a sample of the sites that pass. The portal orders the cards
-de novo candidates first, then Mendelian violations, each in position order.
+`deNovoCandidate,mendelianViolation` by default, in the VCF's order and with its
+header, so the file is still a VCF for `jb2export` and the portal. Add
+`consistent` for a sample of the sites that pass. The portal orders the cards de
+novo candidates first, then Mendelian violations, each in position order.
 
 ## A card
 

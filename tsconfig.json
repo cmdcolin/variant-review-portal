@@ -9,6 +9,7 @@
     "allowJs": true,
     "strict": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true
   },
   "include": ["bin", "lib", "test", "docs"]
