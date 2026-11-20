@@ -144,7 +144,7 @@ const SITES = [
   '1\t100\t.\tA\tG\t.\tPASS\t.\tGT:DP\t0|1:20\t0|0:20\t0|0:18',
   '1\t200\t.\tC\tT\t.\tPASS\t.\tGT\t0|0\t1|0\t1|1',
   '1\t300\t.\tG\tA\t.\tPASS\t.\tGT\t0|1\t0|0\t1|1',
-  '1\t400\t.\tTA\tT\t.\tPASS\t.\tGT\t1|0\t1|1\t1|1',
+  '1\t400\t.\tT\tA\t.\tPASS\t.\tGT\t1|0\t1|1\t1|1',
   '2\t100\t.\tA\tG\t.\tPASS\t.\tGT\t0|1\t0|0\t0|0',
   '1\t500\t.\tA\tG\t.\tPASS\t.\tGT\t0|1\t./.\t0|0',
 ]
@@ -258,6 +258,13 @@ test('the allele in neither parent is counted as the ALT, or as the reads withou
     novel: true,
   })
   assert.equal(novelCount(lane, ['2'], 'A', ['G', 'T']).novel, false)
+  // an indel's reads can carry it a few bases off its column
+  assert.deepEqual(novelCount(lane, ['0'], 'A', ['AAGTTAT']), {
+    bases: 'AAGTTAT',
+    reads: 9,
+    depth: 20,
+    novel: false,
+  })
   assert.equal(novelCount({ label: 'k' }, ['1'], 'A', ['G']), undefined)
 })
 
