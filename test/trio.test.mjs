@@ -3,7 +3,7 @@ import { test } from 'node:test'
 
 import { buildCards, parseManifest } from '../lib/cards.mjs'
 import { fromTsv, tallyVerdicts, toTsv } from '../lib/review.mjs'
-import { classifyTrio } from '../lib/vendor/classifyTrio.ts'
+import { classifyTrio } from '../lib/classifyTrio.mjs'
 import {
   novelCount,
   parsePedigree,

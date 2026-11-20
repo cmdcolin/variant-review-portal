@@ -1,6 +1,5 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "ignorePatterns": ["lib/vendor/**", "test/vendor/classifyTrio.test.ts"],
   "plugins": ["typescript", "unicorn", "oxc", "import", "react", "node"],
   "categories": {
     "correctness": "error",

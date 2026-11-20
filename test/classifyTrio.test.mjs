@@ -1,41 +1,22 @@
-import { describe, expect, it } from './jest.ts'
+import { describe, expect, it } from './jest.mjs'
 import {
   MAX_CLASSIFIED_PLOIDY,
   classifyTrio,
   mostSevereTrioClass,
-} from '../../lib/vendor/classifyTrio.ts'
-
-import type {
-  PedigreeSex,
-  TransmissionEntry,
-  TrioClass,
-} from '../../lib/vendor/classifyTrio.ts'
-
-interface Row {
-  name: string
-  child: string
-  father: string | undefined
-  mother: string | undefined
-  sex?: PedigreeSex
-  rule?: TransmissionEntry[]
-  expected: TrioClass | undefined
-}
-
-const hg38X: TransmissionEntry[] = [{ sex: 'male', from: 'mother' }]
-const hg38Y: TransmissionEntry[] = [{ sex: 'male', from: 'father' }]
-const hg38M: TransmissionEntry[] = [{ from: 'either' }]
-const haplodiploid: TransmissionEntry[] = [{ sex: 'male', from: 'mother' }]
-const zwZ: TransmissionEntry[] = [{ sex: 'female', from: 'father' }]
-const zwW: TransmissionEntry[] = [{ sex: 'female', from: 'mother' }]
-const xoX: TransmissionEntry[] = [{ sex: 'male', from: 'mother' }]
-const yeastM: TransmissionEntry[] = [{ from: 'either' }]
-
-function run({ child, father, mother, sex, rule = [] }: Row) {
+} from '../lib/classifyTrio.mjs'
+const hg38X = [{ sex: 'male', from: 'mother' }]
+const hg38Y = [{ sex: 'male', from: 'father' }]
+const hg38M = [{ from: 'either' }]
+const haplodiploid = [{ sex: 'male', from: 'mother' }]
+const zwZ = [{ sex: 'female', from: 'father' }]
+const zwW = [{ sex: 'female', from: 'mother' }]
+const xoX = [{ sex: 'male', from: 'mother' }]
+const yeastM = [{ from: 'either' }]
+function run({ child, father, mother, sex, rule = [] }) {
   return classifyTrio(child, father, mother, { sex, rule })
 }
-
 describe('autosomal truth table', () => {
-  it.each<Row>([
+  it.each([
     {
       name: '0/1 from 0/0 x 0/0',
       child: '0/1',
@@ -124,9 +105,8 @@ describe('autosomal truth table', () => {
     expect(run(row)).toBe(row.expected)
   })
 })
-
 describe("under hg38's entries", () => {
-  it.each<Row>([
+  it.each([
     {
       name: 'male X 1, father 0, mother 0/1',
       child: '1',
@@ -244,9 +224,8 @@ describe("under hg38's entries", () => {
     expect(run(row)).toBe(row.expected)
   })
 })
-
 describe('across taxa', () => {
-  it.each<Row>([
+  it.each([
     {
       name: 'autotetraploid 2 + 2',
       child: '0/0/1/1',
@@ -509,11 +488,10 @@ describe('across taxa', () => {
     expect(run(row)).toBe(row.expected)
   })
 })
+const calls = (ploidy, allele) =>
+  Array.from({ length: ploidy }, () => allele).join('/')
 
 describe('the ploidy cap', () => {
-  const calls = (ploidy: number, allele: string) =>
-    Array.from({ length: ploidy }, () => allele).join('/')
-
   it('classifies a child at the cap', () => {
     expect(
       classifyTrio(
@@ -524,7 +502,6 @@ describe('the ploidy cap', () => {
       ),
     ).toBe('deNovoCandidate')
   })
-
   it('leaves a child past the cap unclassified', () => {
     expect(
       classifyTrio(
@@ -536,13 +513,8 @@ describe('the ploidy cap', () => {
     ).toBeUndefined()
   })
 })
-
 describe('mostSevereTrioClass', () => {
-  it.each<{
-    name: string
-    classes: (TrioClass | undefined)[]
-    expected: TrioClass | undefined
-  }>([
+  it.each([
     { name: 'no trios', classes: [], expected: undefined },
     {
       name: 'none classifiable',

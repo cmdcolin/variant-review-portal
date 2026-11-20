@@ -1,9 +1,9 @@
 # Reviewing a trio
 
 A trio VCF and a pedigree give a queue of the sites where the child's genotype
-cannot be made of one gamete from each parent. JBrowse's Mendelian check flags
-those sites; checking one means the child's and both parents' reads at it. The
-portal draws the three in one picture a site, so the queue can be finished.
+cannot be made of one gamete from each parent. The portal's Mendelian check
+flags those sites; checking one means the child's and both parents' reads at it.
+The portal draws the three in one picture a site, so the queue can be finished.
 
 ```bash
 # the sites the Mendelian check flags, de novo candidates and Mendelian
@@ -59,15 +59,16 @@ colors need a `jb2export` newer than 5.0.0-beta.22.
 
 ## The classifier
 
-Both commands run JBrowse's `classifyTrio` (ADR-279 in jbrowse-components), the
-one rule the variant track colors by: any ploidy, read from the genotype; a duo
-the known parent cannot settle is no call; `either`, polyploid and aneuploid
-splits never report a violation. The check ignores phase.
+Both commands run `lib/classifyTrio.mjs`: any ploidy, read from the genotype; a
+duo the known parent cannot settle is no call; `either`, polyploid and aneuploid
+splits never report a violation. The check ignores phase. It splits a flagged
+site into a de novo candidate, an allele in neither parent, or a Mendelian
+violation, which orders the queue and picks the verdicts a card offers.
 
-`@jbrowse/plugin-variants` 5.0.0-beta.22, the latest published, predates the
-check and exports no subpath for it, so `lib/vendor/classifyTrio.ts` is a copy,
-byte for byte, with its truth-table tests in `test/vendor/`. It goes when a
-published package exports the file (see [DEVELOPMENT.md](../DEVELOPMENT.md)).
+JBrowse itself runs no check: its trio tutorial colors the calls by
+`bcftools +mendelian2 -m a`'s `INFO/MERR`, the number of trios in error, which
+has no such split. On the KHV trio over chr1:190-200 Mb both flag the same 173
+sites.
 
 ## The queue
 

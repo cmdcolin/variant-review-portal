@@ -28,7 +28,7 @@
     "node": ">=23.6"
   },
   "scripts": {
-    "test": "node --test test/*.test.mjs test/vendor/*.test.ts",
+    "test": "node --test test/*.test.mjs",
     "test:browser": "node test/browser.mjs",
     "lint": "oxlint",
     "format": "oxfmt",

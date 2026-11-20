@@ -15,8 +15,8 @@ import {
 
 const HELP = `Usage: variant-review-trio-sites --vcf <file> --pedigree <file> --out <file>
 
-Writes the sites of a trio VCF where JBrowse's Mendelian check flags the
-child's genotype, as a VCF for jb2export batch --sites and variant-review-portal.
+Writes the sites of a trio VCF where the Mendelian check flags the child's
+genotype, as a VCF for jb2export batch --sites and variant-review-portal.
 
   variant-review-trio-sites --vcf trio.vcf.gz --pedigree family.ped \\
     --region chr1:190000000-200000000 --out sites.vcf
