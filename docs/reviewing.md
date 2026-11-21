@@ -22,6 +22,15 @@ has a verdict.
 The URL updates with the filters, the order and the card under the cursor, so
 copying it gives a link to that card in that queue.
 
+## Answering a run of cards at once
+
+One cause often flags many neighboring sites, such as a deletion that makes
+every site in it look homozygous. Shift-click a second card or row, or press
+<kbd>J</kbd> and <kbd>K</kbd>, to select every card from the cursor to there. An
+answer key, a button on a selected card, or **Clear** then applies to the whole
+selection, and <kbd>Esc</kbd> drops it. In the table, sorted by position, such a
+run is a block of rows with the same genotypes.
+
 ## Asking your own question
 
 `--question question.json` replaces the question and its answers, as

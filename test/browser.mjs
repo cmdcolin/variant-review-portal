@@ -269,6 +269,31 @@ try {
     /0\|1 G 9\/20.*Missed in mother/,
   )
 
+  await page.select('#sf', 'all')
+  const rows = await page.$$('.index tbody tr:not(.group)')
+  assert.equal(rows.length, 2)
+  await rows[0].click()
+  await page.keyboard.down('Shift')
+  await rows[1].click()
+  await page.keyboard.up('Shift')
+  assert.match(await text('.selection'), /^2 selected/)
+  await page.keyboard.press('5')
+  assert.equal(await count('.selection'), 0)
+  assert.match(await text('#msg'), /2 cards answered Copy-number change/)
+  assert.match(await text('#tally'), /^2 copy-number change$/)
+
+  await page.keyboard.press('t')
+  await page.keyboard.press('k')
+  await page.keyboard.press('J')
+  assert.equal(await count('.card[data-selected="true"]'), 2)
+  await page.keyboard.press('Escape')
+  assert.equal(await count('.card[data-selected="true"]'), 0)
+  await page.keyboard.press('K')
+  assert.equal(await count('.card[data-selected="true"]'), 2)
+  await page.$eval('.card[data-current="true"] .unanswer', el => el.click())
+  assert.match(await text('#msg'), /2 answers cleared/)
+  assert.match(await text('#done'), /0 of 2 judged/)
+
   assert.deepEqual(problems, [])
   console.log('browser test passed')
 } finally {

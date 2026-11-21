@@ -243,6 +243,10 @@
       .card[data-current='true'] {
         border-left-color: CanvasText;
       }
+      .card[data-selected='true'],
+      .index tr[data-selected='true'] {
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+      }
       .card {
         scroll-margin-top: calc(var(--header-h, 110px) + 10px);
       }
@@ -689,6 +693,12 @@
       .shown {
         font-size: 13px;
         color: GrayText;
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .selection {
+        font-size: 13px;
         display: inline-flex;
         gap: 8px;
         align-items: center;

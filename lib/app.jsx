@@ -27,6 +27,12 @@ import {
 const IMPACTS = ['HIGH', 'MODERATE', 'LOW', 'MODIFIER']
 const GENES_SHOWN = 4
 
+const keepTextUnselected = e => {
+  if (e.shiftKey) {
+    e.preventDefault()
+  }
+}
+
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
 
 function facts(card) {
@@ -185,6 +191,7 @@ const Card = React.memo(function Card({
   verdict,
   note,
   current,
+  selected,
   onVerdict,
   onNote,
   onPick,
@@ -201,9 +208,11 @@ const Card = React.memo(function Card({
       data-cls={card.cls}
       data-verdict={verdict}
       data-current={current ? 'true' : undefined}
+      data-selected={selected ? 'true' : undefined}
+      onMouseDown={keepTextUnselected}
       onClick={e => {
         if (!e.target.closest('a, button, input, summary')) {
-          onPick(card.id)
+          onPick(card.id, e.shiftKey)
         }
       }}
     >
@@ -318,7 +327,6 @@ const Card = React.memo(function Card({
               title={b.title}
               aria-pressed={verdict === b.v}
               onClick={() => {
-                onPick(card.id)
                 onVerdict(card.id, b.v)
               }}
             >
@@ -332,7 +340,6 @@ const Card = React.memo(function Card({
             disabled={!verdict}
             title="Take the answer back, leaving the card unreviewed"
             onClick={() => {
-              onPick(card.id)
               onVerdict(card.id, '')
             }}
           >
@@ -425,6 +432,7 @@ function Table({
   verdicts,
   notes,
   cursor,
+  selection,
   sort,
   onPick,
   onOpen,
@@ -613,8 +621,10 @@ function Table({
               key={card.id}
               ref={el => bind(card.id, el)}
               data-current={card.id === cursor ? 'true' : undefined}
-              onClick={() => {
-                onPick(card.id)
+              data-selected={selection.has(card.id) ? 'true' : undefined}
+              onMouseDown={keepTextUnselected}
+              onClick={e => {
+                onPick(card.id, e.shiftKey)
               }}
               onDoubleClick={() => {
                 onOpen(card.id)
@@ -655,6 +665,7 @@ export function App({ data }) {
   const [sort, setSort] = useState('callset')
   const [view, setView] = useState('cards')
   const [cursor, setCursor] = useState(/** @type {string | null} */ (null))
+  const [anchor, setAnchor] = useState(/** @type {string | null} */ (null))
   const [msg, setMsg] = useState('')
 
   const nodes = useRef(new Map())
@@ -801,28 +812,75 @@ export function App({ data }) {
     })
   }, [ready, cursor, view])
 
-  const setVerdict = useCallback(
-    (id, val) => {
-      const next = { ...verdicts }
-      if (val) {
-        next[id] = val
-      } else {
-        delete next[id]
-      }
+  // One timer rather than one per message: two messages inside five seconds and
+  // the first one's timer wipes the second.
+  const say = useCallback(text => {
+    setMsg(text)
+    clearTimeout(msgTimer.current)
+    msgTimer.current = setTimeout(() => {
+      setMsg('')
+    }, 5000)
+  }, [])
 
-      // Under a verdict filter the card just judged leaves the list. The cursor
-      // steps to the one closing over it, not out of the page with the card and
-      // not back to the top of a queue the reviewer is deep into.
-      const card = data.cards.find(c => c.id === id)
-      if (card && !matches(card, { ...filter, verdicts: next })) {
-        const i = visible.findIndex(c => c.id === id)
-        const successor =
-          i === -1 ? null : (visible[i + 1] ?? visible[i - 1] ?? null)
-        setCursor(successor?.id ?? null)
-      }
-      setVerdicts(next)
+  const selection = useMemo(() => {
+    const from = visible.findIndex(c => c.id === anchor)
+    const to = visible.findIndex(c => c.id === cursor)
+    return from === -1 || to === -1
+      ? []
+      : visible.slice(Math.min(from, to), Math.max(from, to) + 1).map(c => c.id)
+  }, [visible, anchor, cursor])
+
+  const selectedIds = useMemo(
+    () => new Set(selection.length > 1 ? selection : []),
+    [selection],
+  )
+
+  const pick = useCallback(
+    (id, extend) => {
+      setAnchor(extend ? prev => prev ?? cursor : null)
+      setCursor(id)
     },
-    [verdicts, data.cards, filter, visible],
+    [cursor],
+  )
+
+  // Under a verdict filter the cards just answered leave the list. The cursor
+  // steps to the one closing over them, not out of the page with them and not
+  // back to the top of a queue the reviewer is deep into.
+  const answer = useCallback(
+    (at, val) => {
+      const ids = selection.includes(at) ? selection : [at]
+      const next = { ...verdicts }
+      for (const id of ids) {
+        if (val) {
+          next[id] = val
+        } else {
+          delete next[id]
+        }
+      }
+      const stays = card => matches(card, { ...filter, verdicts: next })
+      const answered = new Set(ids)
+      const first = visible.findIndex(c => answered.has(c.id))
+      const last = visible.findLastIndex(c => answered.has(c.id))
+      const here = visible.find(c => c.id === at)
+      setCursor(
+        here && stays(here)
+          ? at
+          : ((
+              visible.slice(last + 1).find(stays) ??
+              visible.slice(0, Math.max(first, 0)).findLast(stays)
+            )?.id ?? null),
+      )
+      setAnchor(null)
+      setVerdicts(next)
+      if (ids.length > 1) {
+        say(
+          val
+            ? `${plural(ids.length, 'card')} answered ${choices.find(b => b.v === val)?.label}`
+            : `${plural(ids.length, 'answer')} cleared`,
+        )
+      }
+    },
+    [verdicts, filter, visible, selection, choices, say],
   )
 
   const setNote = useCallback((id, text) => {
@@ -897,10 +955,23 @@ export function App({ data }) {
           setKeysOpen(open => !open)
         },
         j: () => {
+          setAnchor(null)
           move(1)
         },
         k: () => {
+          setAnchor(null)
           move(-1)
+        },
+        J: () => {
+          setAnchor(prev => prev ?? here)
+          move(1)
+        },
+        K: () => {
+          setAnchor(prev => prev ?? here)
+          move(-1)
+        },
+        Escape: () => {
+          setAnchor(null)
         },
         t: () => {
           wantScroll.current = true
@@ -944,24 +1015,23 @@ export function App({ data }) {
         act()
         return
       }
-      const answer =
+      const val =
         e.key === CLEAR_KEY ? '' : choices.find(b => b.key === e.key)?.v
       const id = here ?? visible[0]?.id
-      if (answer === undefined || !id) {
+      if (val === undefined || !id) {
         return
       }
       e.preventDefault()
       if (id !== cursor) {
         wantScroll.current = true
-        setCursor(id)
       }
-      setVerdict(id, answer)
+      answer(id, val)
     }
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('keydown', onKey)
     }
-  }, [move, setVerdict, openCard, visible, cursor, view, choices])
+  }, [move, answer, openCard, visible, cursor, view, choices])
 
   // Changing a filter can strand the cursor on a card that is no longer
   // listed; there is no position to hold on to, so it goes to the top.
@@ -971,16 +1041,6 @@ export function App({ data }) {
     }
     setCursor(visible.length ? visible[0].id : null)
   }, [ready, visible, cursor])
-
-  // One timer rather than one per message: two messages inside five seconds and
-  // the first one's timer wipes the second.
-  const say = useCallback(text => {
-    setMsg(text)
-    clearTimeout(msgTimer.current)
-    msgTimer.current = setTimeout(() => {
-      setMsg('')
-    }, 5000)
-  }, [])
 
   function exportTsv() {
     const blob = new Blob([toTsv(data.cards, verdicts, notes)], {
@@ -1363,6 +1423,20 @@ export function App({ data }) {
               </button>
             </span>
           ) : null}
+          {selection.length > 1 ? (
+            <span className="selection">
+              {selection.length} selected · an answer key answers them all
+              <button
+                type="button"
+                className="clear"
+                onClick={() => {
+                  setAnchor(null)
+                }}
+              >
+                Unselect
+              </button>
+            </span>
+          ) : null}
           <span id="msg" className="msg" role="status">
             {msg}
           </span>
@@ -1372,6 +1446,10 @@ export function App({ data }) {
           <span>
             <kbd>j</kbd>
             <kbd>k</kbd> move
+          </span>
+          <span>
+            <kbd>J</kbd>
+            <kbd>K</kbd> or shift-click select a run, <kbd>Esc</kbd> unselect
           </span>
           <span>
             {choices.map(b => (
@@ -1433,8 +1511,9 @@ export function App({ data }) {
             verdicts={verdicts}
             notes={notes}
             cursor={cursor}
+            selection={selectedIds}
             sort={sort}
-            onPick={setCursor}
+            onPick={pick}
             onOpen={openCard}
             bind={bind}
           />
@@ -1451,9 +1530,10 @@ export function App({ data }) {
                 verdict={verdicts[c.id] ?? ''}
                 note={notes[c.id] ?? ''}
                 current={c.id === cursor}
-                onVerdict={setVerdict}
+                selected={selectedIds.has(c.id)}
+                onVerdict={answer}
                 onNote={setNote}
-                onPick={setCursor}
+                onPick={pick}
                 onEvent={showEvent}
                 bind={bind}
                 contextOpen={contextOpen}

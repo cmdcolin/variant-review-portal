@@ -177,7 +177,10 @@ its wide run in two and a half.
 
 - **The Mendelian violations** are mostly the CFHR1 deletion: at 69 sites from
   196,807,156 to 196,835,670 the father is `1|1` on about half his depth and the
-  daughter `0|0` on about half hers, a one-copy sample called homozygous.
+  daughter `0|0` on about half hers, a one-copy sample called homozygous. In the
+  table they are 69 rows in a row, which a click on the first, a shift-click on
+  the last and <kbd>5</kbd> answer as one
+  ([Answering a run of cards at once](reviewing.md#answering-a-run-of-cards-at-once)).
 - **The de novo candidates**, in a random sample of 30 checked by eye:
   - 8 a missed parental het: the child's allele in a parent's reads at the site
   - 6 an indel at the site in a parent's reads and the child's, which the caller
