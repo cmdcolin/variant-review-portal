@@ -149,6 +149,31 @@ function TrioCalls({ card, describe }) {
   )
 }
 
+function Shot({ img, alt, url, zoomed, onZoom }) {
+  return img.src ? (
+    <img
+      className="shot"
+      loading="lazy"
+      alt={alt}
+      src={img.src}
+      width={img.width}
+      height={img.height}
+      style={img.width ? { '--w': img.width, '--h': img.height } : undefined}
+      data-zoom={zoomed}
+      title="Click to switch between fitted and full size"
+      onClick={() => {
+        onZoom(!zoomed)
+      }}
+    />
+  ) : (
+    <div className="missing">
+      {img.status === 'failed'
+        ? `This render failed. Rerun jb2export batch with --resume to draw it${url ? '; the link still opens it live' : ''}.`
+        : 'This run has no image for the record: its --limit or --passOnly differed.'}
+    </div>
+  )
+}
+
 const Card = React.memo(function Card({
   card,
   label,
@@ -162,6 +187,7 @@ const Card = React.memo(function Card({
   onPick,
   onEvent,
   bind,
+  contextOpen,
 }) {
   const [zoomed, setZoomed] = useState(false)
   return (
@@ -237,31 +263,35 @@ const Card = React.memo(function Card({
           {card.images.length > 1 ? (
             <figcaption>{img.lanes.map(l => l.label).join(' and ')}</figcaption>
           ) : null}
-          {img.src ? (
-            <img
-              className="shot"
-              loading="lazy"
-              alt={`${img.lanes.map(l => l.label).join(' and ')}: genome view of ${card.title}`}
-              src={img.src}
-              width={img.width}
-              height={img.height}
-              style={
-                img.width ? { '--w': img.width, '--h': img.height } : undefined
-              }
-              data-zoom={zoomed}
-              title="Click to switch between fitted and full size"
-              onClick={() => {
-                setZoomed(!zoomed)
-              }}
-            />
-          ) : (
-            <div className="missing">
-              {img.status === 'failed'
-                ? `This render failed. Rerun jb2export batch with --resume to draw it${card.url ? '; the link still opens it live' : ''}.`
-                : 'This run has no image for the record: its --limit or --passOnly differed.'}
-            </div>
-          )}
+          <Shot
+            img={img}
+            alt={`${img.lanes.map(l => l.label).join(' and ')}: genome view of ${card.title}`}
+            url={card.url}
+            zoomed={zoomed}
+            onZoom={setZoomed}
+          />
         </figure>
+      ))}
+      {card.context.map(img => (
+        <details
+          className="context"
+          key={`${img.name}:${contextOpen}`}
+          open={contextOpen}
+        >
+          <summary>
+            Zoomed out
+            {img.bp === undefined
+              ? ''
+              : ` · ${sizeLabel(img.bp)} · ${img.locs.join(' ↔ ')}`}
+          </summary>
+          <Shot
+            img={img}
+            alt={`Zoomed-out view of ${card.title}`}
+            url={card.url}
+            zoomed={zoomed}
+            onZoom={setZoomed}
+          />
+        </details>
       ))}
       {card.info.length ? (
         <details className="record">
@@ -596,6 +626,8 @@ export function App({ data }) {
   const [exported, setExported] = useState({ verdicts: {}, notes: {} })
   const [keysOpen, setKeysOpen] = useState(false)
   const [fit, setFit] = useState(true)
+  const [contextOpen, setContextOpen] = useState(false)
+  const hasContext = data.cards.some(c => c.context.length)
   const [filter, setFilter] = useState(FILTER_DEFAULTS)
   const [sort, setSort] = useState('callset')
   const [view, setView] = useState('cards')
@@ -619,6 +651,7 @@ export function App({ data }) {
       setExported(saved.exported ?? { verdicts: {}, notes: {} })
       setKeysOpen(!!saved.keys)
       setFit(saved.fit ?? true)
+      setContextOpen(!!saved.context)
     } catch {
       /* private window, or site data blocked */
     }
@@ -651,12 +684,22 @@ export function App({ data }) {
           exported,
           keys: keysOpen,
           fit,
+          context: contextOpen,
         }),
       )
     } catch {
       /* nothing to do; the page still works for this session */
     }
-  }, [ready, data.portalId, verdicts, notes, exported, keysOpen, fit])
+  }, [
+    ready,
+    data.portalId,
+    verdicts,
+    notes,
+    exported,
+    keysOpen,
+    fit,
+    contextOpen,
+  ])
 
   useEffect(() => {
     if (ready) {
@@ -839,6 +882,20 @@ export function App({ data }) {
         },
         n: () => {
           nodes.current.get(here)?.querySelector('input.note')?.focus()
+        },
+        Z: () => {
+          wantScroll.current = true
+          setContextOpen(on => !on)
+        },
+        z: () => {
+          const panels = [
+            ...(nodes.current.get(here)?.querySelectorAll('details.context') ??
+              []),
+          ]
+          const open = !panels[0]?.open
+          for (const panel of panels) {
+            panel.open = open
+          }
         },
         o: () => {
           const url = visible.find(c => c.id === here)?.url
@@ -1055,6 +1112,20 @@ export function App({ data }) {
           >
             Fit
           </button>
+          {hasContext ? (
+            <button
+              id="context"
+              type="button"
+              aria-pressed={contextOpen}
+              title="Open the zoomed-out view on every card"
+              onClick={() => {
+                wantScroll.current = true
+                setContextOpen(!contextOpen)
+              }}
+            >
+              Zoomed out
+            </button>
+          ) : null}
           <button
             id="keysbtn"
             type="button"
@@ -1284,6 +1355,11 @@ export function App({ data }) {
           <span>
             <kbd>o</kbd> open in JBrowse
           </span>
+          {hasContext ? (
+            <span>
+              <kbd>z</kbd> zoomed-out view <kbd>Z</kbd> on every card
+            </span>
+          ) : null}
           <span>
             <kbd>t</kbd> table <kbd>Enter</kbd> its card
           </span>
@@ -1335,6 +1411,7 @@ export function App({ data }) {
                 onPick={setCursor}
                 onEvent={showEvent}
                 bind={bind}
+                contextOpen={contextOpen}
               />
             ))}
           </div>

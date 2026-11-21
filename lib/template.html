@@ -423,10 +423,17 @@
       details.record {
         font-size: 12px;
       }
-      details.record summary {
+      details.record summary,
+      details.context summary {
         cursor: pointer;
         color: GrayText;
         width: fit-content;
+      }
+      details.context {
+        font-size: 12px;
+      }
+      details.context[open] summary {
+        padding-bottom: 4px;
       }
       .fields {
         margin: 8px 0 0;

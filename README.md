@@ -31,7 +31,8 @@ npm i -g @jbrowse/img@next   # jb2export
 
 ```bash
 jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \
-  --track tumor_reads --track normal_reads --outDir reads --manifest
+  --track tumor_reads unit=chain --track normal_reads unit=chain \
+  --outDir reads --manifest
 
 variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads \
   --support TUMOR:AD,NORMAL:AD --out portal
@@ -43,7 +44,8 @@ npx serve portal
 tumor's first. The portal groups the queue by those counts into calls with no
 supporting read, calls with supporting reads in the normal too, and calls
 supported in the tumor alone. `jb2export` draws a record's loci side by side in
-one row.
+one row, and `unit=chain` draws each read with its mate and split segments in
+one row, as JBrowse's "View as pairs/link supplementary alignments" does.
 
 | SV class           | The card shows                                                                          |
 | ------------------ | --------------------------------------------------------------------------------------- |

@@ -50,6 +50,9 @@ Options:
               review and the rest are its controls. A bare <dir> is one track
               named after the directory. Repeat for images rendered apart: the
               first directory's rows are the cards
+  --context   <dir>: a jb2export batch --outDir holding manifest.tsv, drawn
+              zoomed out with a wide --flank, shown in a panel under each
+              card's images. Its tracks are not counted. Repeatable
   --out       directory to write the portal to
   --title     page heading (default: the VCF's file name)
   --support   required but for a trio queue: the FORMAT keys the caller
@@ -89,6 +92,7 @@ const { values } = parseArgs({
   options: {
     vcf: { type: 'string' },
     images: { type: 'string', multiple: true },
+    context: { type: 'string', multiple: true },
     out: { type: 'string' },
     title: { type: 'string' },
     facet: { type: 'string', multiple: true },
@@ -111,6 +115,14 @@ if (!vcf || !images?.length || !out) {
   fail('needs --vcf, at least one --images and --out. See --help.')
 }
 
+function readManifest(dir) {
+  const manifest = path.join(dir, 'manifest.tsv')
+  if (!fs.existsSync(manifest)) {
+    fail(`${manifest} not found: render ${dir} with jb2export batch --manifest`)
+  }
+  return parseManifest(fs.readFileSync(manifest, 'utf8'))
+}
+
 const sets = images.map(arg => {
   const eq = arg.indexOf('=')
   const dir = eq === -1 ? arg : arg.slice(eq + 1)
@@ -120,17 +132,24 @@ const sets = images.map(arg => {
     .split(',')
     .map(l => l.trim())
     .filter(Boolean)
-  const manifest = path.join(dir, 'manifest.tsv')
-  if (!fs.existsSync(manifest)) {
-    fail(`${manifest} not found: render ${dir} with jb2export batch --manifest`)
-  }
   return {
     name: labels.join('_'),
     labels,
     dir,
-    rows: parseManifest(fs.readFileSync(manifest, 'utf8')),
+    rows: readManifest(dir),
   }
 })
+const contexts = (values.context ?? []).map(dir => ({
+  name: `context_${path.basename(path.resolve(dir))}`,
+  dir,
+  rows: readManifest(dir),
+}))
+const names = [...sets, ...contexts].map(s => s.name)
+if (new Set(names).size !== names.length) {
+  fail(
+    `two image directories share the name "${names.find((n, i) => names.indexOf(n) !== i)}": give each --context directory its own name`,
+  )
+}
 const labels = sets.flatMap(s => s.labels)
 if (new Set(labels).size !== labels.length) {
   fail(
@@ -202,6 +221,7 @@ try {
   cards = buildCards({
     vcfText,
     sets,
+    contexts,
     link,
     support: trio || fromImages ? [] : parseSupport(values.support),
     trio,
@@ -226,9 +246,9 @@ function pngSize(file) {
     : {}
 }
 
-const dirOf = new Map(sets.map(s => [s.name, s.dir]))
+const dirOf = new Map([...sets, ...contexts].map(s => [s.name, s.dir]))
 for (const card of cards) {
-  for (const image of card.images) {
+  for (const image of [...card.images, ...card.context]) {
     const from = image.file && path.join(dirOf.get(image.name), image.file)
     if (image.src && fs.existsSync(from)) {
       const dest = path.join(out, 'img', image.name)

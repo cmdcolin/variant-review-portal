@@ -763,3 +763,32 @@ test('--support refuses a key or a sample the VCF does not have', () => {
     /no sample column BLOOD, only TUMOR, NORMAL/,
   )
 })
+
+test('a context run joins each card on its line, uncounted, with its span', () => {
+  const ZOOMED = [
+    head,
+    '1_a.png\tchr3:0-50000 chr10:33000-83000\ta\t8\tder3\t5\tok',
+    '2_del.png\tchr1:0-60000\t\t9\t\t\tok',
+  ].join('\n')
+  const [bnd, del, ins] = buildCards({
+    vcfText: VCF,
+    sets: [{ name: 'tumor', labels: ['tumor'], rows: parseManifest(TUMOR) }],
+    contexts: [{ name: 'context_wide', rows: parseManifest(ZOOMED) }],
+  })
+  assert.deepEqual(bnd.context, [
+    {
+      name: 'context_wide',
+      src: 'img/context_wide/1_a.png',
+      file: '1_a.png',
+      status: 'ok',
+      locs: ['chr3:0-50000', 'chr10:33000-83000'],
+      bp: 100000,
+    },
+  ])
+  assert.equal(del.context[0].bp, 60000)
+  assert.equal(ins.context[0].status, 'absent')
+  assert.deepEqual(
+    bnd.lanes.map(l => l.label),
+    ['tumor'],
+  )
+})

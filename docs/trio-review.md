@@ -15,14 +15,27 @@ variant-review-trio-sites --vcf HG02024_VN049_KHVTrio.chr1.vcf.gz \
 # the calls, then the child's reads and the parents', in one image a site
 jb2export batch --sites sites.vcf --config examples/khv_trio/config.json \
   --assembly hg38 --track ncbi_refseq_109_hg38_latest height:50 \
-  --track khv_trio_calls height:70 --track HG02024_cram height:200 \
-  --track HG02026_cram height:200 --track HG02025_cram height:200 \
+  --track khv_trio_calls height:70 \
+  --track HG02024_cram heightMode:grow growMaxHeight=1000 \
+  --track HG02026_cram heightMode:grow growMaxHeight=1000 \
+  --track HG02025_cram heightMode:grow growMaxHeight=1000 \
   --flank 75 --outDir reads --manifest
+
+# the same tracks 120 kb wide: each member's coverage on one 0-60 axis, and an
+# arc for each pair or split read that does not fit the reference
+WIDE=(pileup.show=false coverage.alleles.show=false
+  coverage.interbase.show=false maxScore=60
+  readConnections.show=true readConnections.ordinaryPairs.show=false height:130)
+jb2export batch --sites sites.vcf --config examples/khv_trio/config.json \
+  --assembly hg38 --track ncbi_refseq_109_hg38_latest height:60 \
+  --track khv_trio_calls height:60 --track HG02024_cram "${WIDE[@]}" \
+  --track HG02026_cram "${WIDE[@]}" --track HG02025_cram "${WIDE[@]}" \
+  --flank 60000 --outDir wide --manifest
 
 # name each alignments track by its sample, in track order
 variant-review-portal --vcf sites.vcf \
   --pedigree 20130606_g1k_3202_samples_ped_population.txt \
-  --images HG02024,HG02026,HG02025=reads --out portal
+  --images HG02024,HG02026,HG02025=reads --context wide --out portal
 ```
 
 [`examples/khv_trio/config.json`](../examples/khv_trio/config.json) is the
@@ -30,6 +43,33 @@ config: the 1000 Genomes trio's phased chr1 calls with the pedigree, colored by
 the `INFO/MERR` that `bcftools +mendelian2 -m a` writes, and each member's 30x
 CRAM from the project's bucket, named by sample and relationship. The calls
 track's relationship labels need a `jb2export` newer than 5.0.0-beta.22.
+
+Each reads track grows to hold its whole pileup, up to 1000 px, so a 30x
+member's every read is in the picture: a call the reads contradict shows in all
+of them, not in the 20 a fixed height leaves room for. With no `height:` or
+`heightMode:`, `jb2export batch` grows a track to 250 px and drops the reads
+below, the variant reads sorted to the top; `height:200` fixes it at 200.
+
+`--context` puts the wide run in a **Zoomed out** panel under each card's
+picture, closed until clicked, opened on one card with `z` or on every card with
+`Z` and the toolbar's Zoomed out. A site inside a deletion or duplication is one
+of a run of errors there, and a member's coverage steps down or up across it,
+which the 150 bp picture cannot show. A 30x pileup that wide is slow to stream
+into a browser; the batch run streams it once, about 10 s a site for the three
+CRAMs.
+
+- **One axis**: `maxScore=60` draws the three members on one scale, so a member
+  at half the others' depth looks it.
+- **No allele colors**: reads from a paralog pile mismatches on every base and
+  hide a dip under them.
+- **Arcs for the pairs that do not fit**: a deletion with clean breakpoints
+  draws red long-insert arcs across it in the members who carry it. The common
+  LCE3B/LCE3C deletion, chr1:152,583,067-152,615,300, has eight such pairs in
+  the daughter and none in the mother. A deletion between segmental
+  duplications, as at CFHR1, draws none: its breakpoints sit in the repeat,
+  where no read maps uniquely, and coverage is the evidence.
+
+![A Mendelian violation card at chr1:196,816,064 in CFHR1: the daughter 0|0 with 24 reads, the father 1|1 with 8 and the mother 1|0 with 33, and the zoomed-out panel open below, where the calls track has a run of errors across CFHR1 and the daughter's and father's coverage drops there](gallery/trio-zoomed-out.png)
 
 ## Input
 
