@@ -44,54 +44,46 @@ the `INFO/MERR` that `bcftools +mendelian2 -m a` writes, and each member's 30x
 CRAM from the project's bucket, named by sample and relationship. The calls
 track's relationship labels need a `jb2export` newer than 5.0.0-beta.22.
 
-Each reads track grows to hold its whole pileup, up to 1000 px, so a 30x
-member's every read is in the picture: a call the reads contradict shows in all
-of them, not in the 20 a fixed height leaves room for. With no `height:` or
-`heightMode:`, `jb2export batch` grows a track to 250 px and drops the reads
-below, the variant reads sorted to the top; `height:200` fixes it at 200.
+Each reads track grows to 1000 px, so every read of a 30x member is in the
+picture ([Reads track options](rendering.md#reads-track-options)).
 
-`--context` puts the wide run in a **Zoomed out** panel under each card's
-picture, closed until clicked, opened on one card with `z` or on every card with
-`Z` and the toolbar's Zoomed out. A site inside a deletion or duplication is one
-of a run of errors there, and a member's coverage steps down or up across it,
-which the 150 bp picture cannot show. A 30x pileup that wide is slow to stream
-into a browser; the batch run streams it once, about 10 s a site for the three
-CRAMs.
+The wide run is the card's [Zoomed out](rendering.md#zoomed-out) panel. A site
+inside a deletion or duplication is one of a run of errors there, and a member's
+coverage steps down or up across it, which the 150 bp picture cannot show. It
+takes about 10 s a site for the three CRAMs.
 
 - **One axis**: `maxScore=60` draws the three members on one scale, so a member
   at half the others' depth looks it.
 - **No allele colors**: reads from a paralog pile mismatches on every base and
   hide a dip under them.
 - **Arcs for the pairs that do not fit**: a deletion with clean breakpoints
-  draws red long-insert arcs across it in the members who carry it. The common
-  LCE3B/LCE3C deletion, chr1:152,583,067-152,615,300, has eight such pairs in
-  the daughter and none in the mother. A deletion between segmental
-  duplications, as at CFHR1, draws none: its breakpoints sit in the repeat,
-  where no read maps uniquely, and coverage is the evidence.
+  draws red long-insert arcs across it in the members who carry it, eight in the
+  daughter at the LCE3B/LCE3C deletion, chr1:152,583,067-152,615,300.
+- **Coverage where arcs fail**: a deletion between segmental duplications, as at
+  CFHR1, draws no arcs, since no read maps uniquely at its breakpoints.
 
 ![A Mendelian violation card at chr1:196,816,064 in CFHR1: the daughter 0|0 with 24 reads, the father 1|1 with 8 and the mother 1|0 with 33, and the zoomed-out panel open below, where the calls track has a run of errors across CFHR1 and the daughter's and father's coverage drops there](gallery/trio-zoomed-out.png)
 
 ## Input
 
-- **`--pedigree`** is the file JBrowse's `pedigreeLocation` reads: a PLINK
-  `.fam` or `.ped` with no header (FID, IID, PAT, MAT, SEX, PHENO), or a table
-  whose header names `SampleID` or `IID`, `FatherID` or `PAT`, `MotherID` or
-  `MAT` and `Sex`, as 1000 Genomes'
-  `20130606_g1k_3202_samples_ped_population.txt` does. The columns are found
-  from the first row, never the extension. A line holding a tab is split on
-  tabs, so an empty cell keeps its column. A parent or sex of `0`, `-9`, `NA`,
-  `unknown` or an empty cell is missing, and sex `1` is male, `2` female and
-  anything else `other`.
+- **`--pedigree`** is the file JBrowse's `pedigreeLocation` reads.
+  - A PLINK `.fam` or `.ped` with no header (FID, IID, PAT, MAT, SEX, PHENO), or
+    a table whose header names `SampleID` or `IID`, `FatherID` or `PAT`,
+    `MotherID` or `MAT` and `Sex`, as 1000 Genomes'
+    `20130606_g1k_3202_samples_ped_population.txt` does. The first row decides
+    which, never the extension.
+  - A line holding a tab is split on tabs, so an empty cell keeps its column.
+  - A parent or sex of `0`, `-9`, `NA`, `unknown` or an empty cell is missing.
+    Sex `1` is male, `2` female and anything else `other`.
 - **The trio** is the child among the VCF's samples whose father or mother is
   among them too. A VCF holding more than one takes `--child` to pick it. A
   child with one parent in the VCF is a duo, and one whose father and mother are
   the same sample is a selfed line.
 - **`--transmission`** is a JSON list in the format of the assembly's
-  `transmission` slot, `{ "refName", "sex", "from" }`, for the contigs a child
-  does not inherit one copy from each parent: sex chromosomes, organelles,
-  haplodiploid males. `refName` matches the VCF's `CHROM` exactly. Without it,
-  every contig follows the autosomal rule, so a hemizygous male X call counts as
-  a violation.
+  `transmission` slot, `{ "refName", "sex", "from" }`, for sex chromosomes,
+  organelles and haplodiploid males. `refName` matches the VCF's `CHROM`.
+  Without it, every contig follows the autosomal rule, so a hemizygous male X
+  call counts as a violation.
 - **The alignments tracks** are one `jb2export batch` run, the child's track
   first. `--images` names each by its VCF sample, so the portal can match each
   read count to its sample. A track left out (a parent with no reads) leaves
@@ -99,18 +91,15 @@ CRAMs.
 
 ## The classifier
 
-`variant-review-trio-sites` and `variant-review-portal` both run
-`lib/classifyTrio.mjs`, which handles any ploidy, read from each genotype, and
-ignores phase. A duo whose known parent cannot settle a site is no call, and
-`either`, polyploid and aneuploid splits never report a violation. The
-classifier splits a flagged site into a de novo candidate, with an allele in
-neither parent, or a Mendelian violation; the class orders the queue and sets
-the verdicts a card offers.
+Both commands run `lib/classifyTrio.mjs`, which reads the ploidy from each
+genotype and ignores phase. It splits a flagged site into a **de novo
+candidate**, with an allele in neither parent, or a **Mendelian violation**.
 
-JBrowse's trio tutorial colors the calls by the `INFO/MERR` that
-`bcftools +mendelian2 -m a` writes, the number of trios in error, which puts de
-novo candidates and other violations together. On the KHV trio over chr1:190-200
-Mb, bcftools and the classifier flag the same 173 sites.
+- A duo whose known parent cannot settle a site is no call.
+- `either`, polyploid and aneuploid splits never report a violation.
+- On the KHV trio over chr1:190-200 Mb, it flags the same 173 sites as the
+  `INFO/MERR` of `bcftools +mendelian2 -m a`, which JBrowse's trio tutorial
+  colors the calls by.
 
 ## The queue
 
@@ -132,10 +121,10 @@ each in position order.
 - **The class and why**: the allele in neither parent for a de novo candidate
   (`G is in neither parent`), or the parent the child shares no allele with for
   a Mendelian violation (`nothing from the father's T/T`).
-- **The verdicts that fit a trio**, keyed in order: real de novo, missed in the
+- **The answers that fit a trio**, keyed in order: real de novo, missed in the
   father, missed in the mother, child miscall, copy-number change (a deletion or
   uniparental disomy, where the calls are right for a one-copy sample), unclear.
-  A duo offers the parent it has; a selfed line offers one parent.
+  A duo offers the parent it has.
 
 [![A de novo candidate card at chr1:193,838,143: the daughter called 1|0 with C in 15 of her 39 reads, both parents 0|0 with C in none of theirs, and the verdict set to Real de novo](gallery/trio-de-novo.png)](https://jbrowse.org/demos/khv_trio_review/#card=66)
 
@@ -150,12 +139,10 @@ it is the ALT, or the REF at a site with one ALT (as the reads without the ALT):
   or one stray read
 - **only the child's reads have the allele**: the candidates that remain
 
-The portal leaves indels uncounted, because an aligner often places an indel a
-few bases from the record's column, outside the count. A Mendelian violation is
-uncounted too, since none of its alleles is missing from both parents. The
-reviewer judges each card from the picture, and the grouping only orders the
-queue. Here the father is called `0|0`, yet 19 of his 36 reads have the
-daughter's T:
+Indels are left uncounted, since an aligner often places one a few bases from
+the record's column, and so are Mendelian violations, which have no allele
+missing from both parents. The grouping only orders the queue. Here the father
+is called `0|0`, yet 19 of his 36 reads have the daughter's T:
 
 [![A de novo candidate card at chr1:190,014,025: the daughter 1|0 with T in 18 of 34 reads, the father called 0|0 yet with T in 19 of his 36, and the verdict set to Missed in father](gallery/trio-missed-het.png)](https://jbrowse.org/demos/khv_trio_review/#card=21)
 
@@ -176,11 +163,11 @@ chr1:190-200 Mb, rendered with `--jobs 4` from the bucket in about a minute, and
 its wide run in two and a half.
 
 - **The Mendelian violations** are mostly the CFHR1 deletion: at 69 sites from
-  196,807,156 to 196,835,670 the father is `1|1` on about half his depth and the
-  daughter `0|0` on about half hers, a one-copy sample called homozygous. In the
-  table they are 69 rows in a row, which a click on the first, a shift-click on
-  the last and <kbd>5</kbd> answer as one
-  ([Answering a run of cards at once](reviewing.md#answering-a-run-of-cards-at-once)).
+  196,807,156 to 196,835,670 the father is `1|1` and the daughter `0|0`, each on
+  about half their depth, a one-copy sample called homozygous.
+  - In the table they are 69 rows in a row, which a click on the first, a
+    shift-click on the last and <kbd>5</kbd> answer as one
+    ([Answering a run of cards at once](reviewing.md#answering-a-run-of-cards-at-once)).
 - **The de novo candidates**, in a random sample of 30 checked by eye:
   - 8 a missed parental het: the child's allele in a parent's reads at the site
   - 6 an indel at the site in a parent's reads and the child's, which the caller

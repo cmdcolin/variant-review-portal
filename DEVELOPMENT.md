@@ -24,9 +24,10 @@ pnpm format
 
 ## Screenshots
 
-`docs/shoot.mjs` rebuilds the README's gallery in `docs/gallery/`, in light
-mode, from built portals given as directories or hosted URLs and named for the
-callset each holds. The README's are the four hosted portals:
+`docs/shoot.mjs` rebuilds the pictures in `docs/gallery/` that the README and
+the guides show, in light mode, from built portals given as directories or
+hosted URLs and named for the callset each holds. They are shot from the four
+hosted portals:
 
 ```bash
 node docs/shoot.mjs sv=https://jbrowse.org/demos/colo829_review/ \

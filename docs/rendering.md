@@ -4,57 +4,44 @@ A portal is built in two steps: `jb2export batch` draws one image per record,
 and `variant-review-portal` turns those images and the VCF into a page.
 
 ```bash
-# every alignments track in one run, so each record is one image; genes, the
-# callset and repeats beside them show which genes a call hits and which
-# repeats it lies in
-# draw a read with its mate and its split segments in one row, and only the pairs
-# that do not fit the reference as arcs
+# every track in one run, so each record is one image; a read drawn with its
+# mate and split segments in one row, and only the pairs that do not fit the
+# reference as arcs
 READS=(unit=chain readConnections.ordinaryPairs.show=false height:150)
 jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \
   --track genes height:50 --track calls height:50 \
   --track tumor_reads "${READS[@]}" --track normal_reads "${READS[@]}" \
   --track repeats height:50 --outDir reads --manifest
 
-# name the tracks in the images, in track order: the sample, then its controls,
-# and the FORMAT keys the caller counts their supporting reads under
+# the tracks in the images, in track order, the sample's first, and the FORMAT
+# keys the caller counts their supporting reads under
 variant-review-portal --vcf calls.vcf.gz \
   --images tumor,normal=reads --support TUMOR:AD,NORMAL:AD --out portal
 ```
 
-## Versions
-
 `jb2export` comes from
-[`@jbrowse/img`](https://www.npmjs.com/package/@jbrowse/img). Its manifest needs
-the `line` column, newer than 5.0.0-beta.8. Small variants and the reads with a
-record's ALT need a `jb2export` newer than 5.0.0-beta.13, and a live link one
-whose manifest has the `spec` column.
+[`@jbrowse/img`](https://www.npmjs.com/package/@jbrowse/img). Small variants
+need one newer than 5.0.0-beta.13, and a live link one whose manifest has the
+`spec` column.
 
-## Every read
+## Reads track options
 
-A reads track given `height:150` is cut at 150 px. Given no height,
-`jb2export batch` grows it to hold its pileup up to 250 px, the reads with the
-ALT sorted to the top. `heightMode:grow growMaxHeight=1000` in place of
-`height:` raises that ceiling so a 30x pileup is drawn whole, at the cost of
-taller cards.
-
-## Pairs and split reads
-
-`unit=chain` is JBrowse's "View as pairs/link supplementary alignments": a read,
-its mate and its split segments share one row, joined by a line in the color of
-their insert size and orientation. A deletion's discordant pairs then stack as
-rows spanning it, sorted to the top, rather than as halves on separate rows.
-`readConnections.ordinaryPairs.show=false` leaves out the arcs of pairs that fit
-the reference, which in a short-read pileup cover the band in grey.
+- **Height**: `height:150` cuts the pileup at 150 px. With no height,
+  `jb2export batch` grows a track to 250 px, the reads with the ALT sorted to
+  the top. `heightMode:grow growMaxHeight=1000` draws a 30x pileup whole, at the
+  cost of taller cards.
+- **`unit=chain`** is JBrowse's "View as pairs/link supplementary alignments": a
+  read, its mate and its split segments share one row. A deletion's discordant
+  pairs then stack as rows spanning it, not as halves on separate rows.
+- **`readConnections.ordinaryPairs.show=false`** leaves out the arcs of pairs
+  that fit the reference, which in a short-read pileup cover the band in grey.
 
 ## Zoomed out
 
-A second run with a wide `--flank`, given as `--context <dir>`, is a **Zoomed
-out** panel under each card's images, joined on the record's line. It is closed
-until clicked, opened on one card with `z` or on every card with `Z` and the
-toolbar's Zoomed out, which the page remembers. A small variant inside a
-copy-number change or a larger SV is read in that context. The batch run streams
-the reads once where a browser would on every look. Its tracks are not counted,
-so it takes no names.
+`--context <dir>` takes a second run with a wide `--flank` and shows it in a
+**Zoomed out** panel under each card, joined on the record's line. A small
+variant inside a copy-number change or a larger SV shows there. Its tracks are
+not counted, so it takes no names.
 
 ```bash
 # 200 kb around each record: coverage on one axis, and the pairs and split reads
@@ -70,20 +57,18 @@ variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads \
   --context wide --support TUMOR:AD,NORMAL:AD --out portal
 ```
 
-Set `maxScore` above the deepest sample's coverage.
-[Reviewing a trio](trio-review.md) has an example.
+Set `maxScore` above the deepest sample's coverage, so every sample is drawn on
+one axis.
 
 ### Copy number and B-allele frequency
 
-A context run need not draw reads. A tumor's copy-number segments, its log2
-tumor/normal depth ratio and its B-allele frequency over a few megabases show
-whether an SV sits in a gain, a loss or a run of loss of heterozygosity (LOH),
-where the BAF of the germline het sites splits away from 0.5 or collapses to 0
-and 1. They are bigWigs and BEDs, so 4 Mb a card renders in seconds.
-[`examples/hg008/config.json`](../examples/hg008/config.json) carries HG008-T's
-from the [Cancer GIAB](https://jbrowse.org/jb2/docs/tutorials/cnv_cgiab/)
-tutorial: the draft benchmark's copy number per haplotype, the log2 ratio and
-the BAF.
+A context run can draw a tumor's copy-number segments, log2 depth ratio and
+B-allele frequency (BAF) instead of reads. Over a few megabases they show
+whether an SV sits in a gain, a loss or a run of loss of heterozygosity. They
+are bigWigs and BEDs, so a card renders in seconds.
+[`examples/hg008/config.json`](../examples/hg008/config.json) carries HG008-T's,
+from the
+[Cancer GIAB tutorial](https://jbrowse.org/jb2/docs/tutorials/cnv_cgiab/).
 
 ```bash
 jb2export batch --sites hg008.vcf.gz --config examples/hg008/config.json \
@@ -97,11 +82,9 @@ jb2export batch --sites hg008.vcf.gz --config examples/hg008/config.json \
 
 ### The whole genome
 
-`--overview <png>` puts one image above the queue, in a **Genome overview**
-panel: the same tracks over every chromosome, which say before the first card
-what kind of genome the calls are in, HG008-T's losses of whole arms and its
-long runs of LOH. A bigWig draws its zoomed-out summary there, so the image
-takes about 10 s.
+`--overview <png>` shows one image above the queue, in a **Genome overview**
+panel, such as the same tracks over every chromosome: HG008-T's losses of whole
+arms and its long runs of LOH, before the first card. It renders in about 10 s.
 
 ```bash
 jb2export --config examples/hg008/config.json --assembly GRCh38_GIABv3 \
@@ -117,25 +100,24 @@ variant-review-portal --vcf hg008.vcf.gz --images tumor,normal=reads \
 
 Repeat `--images`, one directory per run, and a card stacks them. The first
 directory's rows are the cards, and every other joins on the record's line in
-the VCF, so a run with a different `--limit` shows which cards it lacks.
+the VCF.
 
 ## Links back into JBrowse
 
 Given `--jbrowse` and `--config`, each card links to the view its image was
-drawn in, which the manifest's `spec` column holds, with the tracks `--track`
-named. A track made from a file flag such as `--bam` is in no hosted config, so
-the link leaves it out. [Carrying the reads](carrying-the-reads.md) puts the
-reads in the portal itself.
+drawn in, from the manifest's `spec` column. A track made from a file flag such
+as `--bam` is in no hosted config, so the link leaves it out.
+[Carrying the reads](carrying-the-reads.md) puts the reads in the portal itself.
 
 ## What comes out
 
 ```
 portal/
-  index.html      the review page: filters, verdicts, export
+  index.html      the review page
   img/<tracks>/   a copy of each run's images
   config.json     with variant-review-slice: the config its links open
   reads/          with variant-review-slice: the sliced reads
 ```
 
-Every path in the portal is relative to its directory, so
-`aws s3 sync portal/ s3://…` deploys the whole portal.
+Every path is relative to the portal's directory, so
+`aws s3 sync portal/ s3://…` deploys it whole.

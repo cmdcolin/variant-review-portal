@@ -1,35 +1,42 @@
 # Reviewing
 
-Each card asks one question, **Is the call real?**, and offers its answers as
-buttons under the images, each with its key: <kbd>1</kbd> Real, <kbd>2</kbd>
-Needs a look, <kbd>3</kbd> Artifact. A trio card asks **What do the trio's reads
-show?** instead. **Clear**, or <kbd>0</kbd>, takes the answer back and leaves
-the card unreviewed.
+Each card asks one question, **Is the call real?**, with its answers as buttons
+under the images, each showing its key. A trio card asks **What do the trio's
+reads show?** instead. **Clear** takes the answer back.
 
-In the queue, <kbd>j</kbd> and <kbd>k</kbd> move between cards, an answer's key
-answers the card under the cursor, <kbd>n</kbd> writes a note on it,
-<kbd>o</kbd> opens it in JBrowse and <kbd>/</kbd> jumps to the search box.
+| Key                         | Does                                                |
+| --------------------------- | --------------------------------------------------- |
+| <kbd>j</kbd> <kbd>k</kbd>   | next, previous card                                 |
+| <kbd>1</kbd>, <kbd>2</kbd>… | answer the card under the cursor                    |
+| <kbd>0</kbd>                | clear its answer                                    |
+| <kbd>J</kbd> <kbd>K</kbd>   | select a run of cards; <kbd>Esc</kbd> drops it      |
+| <kbd>n</kbd>                | write a note                                        |
+| <kbd>o</kbd>                | open the card in JBrowse                            |
+| <kbd>z</kbd> <kbd>Z</kbd>   | the zoomed-out view on this card, on every card     |
+| <kbd>t</kbd>                | cards or table; <kbd>Enter</kbd> opens a row's card |
+| <kbd>f</kbd>                | fit images to the window, or full size              |
+| <kbd>/</kbd>                | search                                              |
+| <kbd>?</kbd>                | show these keys                                     |
 
-<kbd>t</kbd> swaps the cards for the table, where the same keys set a row's
-verdict and <kbd>Enter</kbd> opens its card. The table splits the queue into one
-section per class, each in the chosen order, and <kbd>j</kbd> and <kbd>k</kbd>
-walk the sections top to bottom. The order menu sorts by size, by split reads,
-by the reads a control has, or by any number in the caller's sample column.
+With the verdict filter on **Unreviewed**, each card leaves the queue once
+answered. The URL holds the filters, the order and the card under the cursor, so
+copying it links to that card in that queue.
 
-With the verdict filter on **Unreviewed**, each card leaves the queue once it
-has a verdict.
+## The table
 
-The URL updates with the filters, the order and the card under the cursor, so
-copying it gives a link to that card in that queue.
+<kbd>t</kbd> shows the queue as a table, a section per class and a line per
+card. The order menu sorts by size, by split reads, by the reads a control has,
+or by any number in the caller's sample column.
+
+[![The COLO829 SV callset as a table ordered by allele fraction, one section per class, one line per call, with genes, impact, position, size, tumor and normal reads, filter and verdict](gallery/table.png)](https://jbrowse.org/demos/colo829_review/#sort=format%3AAF&view=table)
 
 ## Answering a run of cards at once
 
-One cause often flags many neighboring sites, such as a deletion that makes
-every site in it look homozygous. Shift-click a second card or row, or press
-<kbd>J</kbd> and <kbd>K</kbd>, to select every card from the cursor to there. An
-answer key, a button on a selected card, or **Clear** then applies to the whole
-selection, and <kbd>Esc</kbd> drops it. In the table, sorted by position, such a
-run is a block of rows with the same genotypes.
+One cause, such as a deletion, can flag many neighboring sites. Shift-click a
+second card or row, or press <kbd>J</kbd> or <kbd>K</kbd>, to select every card
+from the cursor to there. An answer then applies to the whole selection. In the
+table, sorted by position, such a run is a block of rows with the same
+genotypes.
 
 ## Asking your own question
 
@@ -47,25 +54,21 @@ run is a block of rows with the same genotypes.
 }
 ```
 
-- `label` is the button's text, and the only field an answer needs.
-- `value` is what the browser stores and **Export** writes in the `verdict`
-  column. It is the label unless given. The page drops a stored answer no button
-  offers, so to rename a label, keep the answers already given by giving the old
-  label as its `value`.
-- `key` is one character. It is the answer's place, 1 up, unless given, and the
-  build refuses a key the page uses already, such as <kbd>n</kbd> for a note.
-- `tone` colors the button when pressed: `real`, `unsure`, `artifact` or
-  `accent`.
-- `title` is the button's tooltip.
+| Field   | Is                                                                         | Unless given           |
+| ------- | -------------------------------------------------------------------------- | ---------------------- |
+| `label` | the button's text; required                                                |                        |
+| `value` | what the browser stores and **Export** writes in the `verdict` column      | the label              |
+| `key`   | one character; the build refuses a key the page uses, such as <kbd>n</kbd> | its place, 1 up        |
+| `tone`  | the pressed button's color: `real`, `unsure`, `artifact` or `accent`       | the card's class color |
+| `title` | the button's tooltip                                                       |                        |
 
-## Saving verdicts
+The page drops a stored answer that no button offers. To rename a label and keep
+the answers already given, give the old label as its `value`.
 
-The portal stores verdicts and notes in the reviewer's browser. **Export**
-writes them as TSV beside each record's line, id, coordinates, genes and
-supporting-read counts, and **Import** reads that TSV back, so a second
-reviewer, or the same one after clearing the browser, continues the review from
-there.
+## Saving answers
 
-Until an export, the verdicts are in one browser only, so the **Export** button
-counts the cards judged or noted since the last export or import, as
+Answers and notes live in the reviewer's browser until **Export** writes them as
+TSV, beside each record's line, id, coordinates, genes and read counts.
+**Import** reads that TSV back, for a second reviewer or a second machine. The
+button counts the cards answered or noted since the last export or import, as
 `Export · 3 new`.

@@ -1,53 +1,62 @@
 # What a card holds
 
-- **One image, every track.** `jb2export` draws a record as one linear view.
-  - The two ends of a deletion, duplication, inversion or translocation, and
-    every locus of an event, are windows side by side in one row under an arc of
-    the reads joining them; a small variant is one window. A `jb2export` of
-    5.0.0-beta.22 or older stacks the chromosomes of a translocation or an event
-    as the panels of a breakpoint split view.
-  - The sample's reads are above its control's, with split reads and reads with
-    a large deletion on top. Any other track of the run is in the image too:
-    genes, the callset itself, repeats.
-  - The image scales to the window so a whole card is on screen at once; click
-    it, or press <kbd>f</kbd>, for full size.
-- **The caller's read counts.** The portal groups the queue by the
-  supporting-read counts in the VCF, so `--support` is required. It names the
-  FORMAT keys the caller counts them under, the sample's first and its controls'
-  after.
+## The image
+
+`jb2export` draws a record as one linear view, with the sample's reads above its
+control's and any other track of the run (genes, the callset, repeats) beside
+them. A small variant is one window, its pileups sorted at the variant's base.
+The ends of an SV, and every locus of an event, are windows side by side in one
+row under an arc of the reads joining them.
+
+| SV class           | The card shows                                                                          |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| Deletion           | The tumor's coverage drops between the ends; split reads and reads with a gap span them |
+| Tandem duplication | An arc of split reads from the end of the copy back to its start                        |
+| Inversion          | An arc of split reads between the two ends                                              |
+| Translocation      | Both chromosomes' windows in one row, with an arc of split reads from one to the other  |
+| Complex event      | A separate card with every locus of the caller's `EVENT` in one image                   |
+
+<table>
+<tr><td width="50%"><a href="https://jbrowse.org/demos/hg008_review/#card=event%3Acluster_12"><img src="gallery/complex-event.png" alt="A caller's event card on chr17: two records over four loci, a tandem duplication and an inversion whose arcs interleave across one picture, joined by 128 tumor split reads and none in the normal" width="100%"></a><br>A duplication and an inversion, interleaved on chr17</td><td width="50%"><a href="https://jbrowse.org/demos/hg008_review/#card=115"><img src="gallery/inversion.png" alt="An inversion card joining chr5 at 20 Mb to chr5 at 156 Mb: one arc of 113 tumor split reads between the two ends, none in the normal, and the verdict set to Real" width="100%"></a><br>An inversion across 136 Mb of chr5</td></tr>
+<tr><td width="50%"><a href="https://jbrowse.org/demos/hg008_review/#card=125"><img src="gallery/duplication.png" alt="A 208 kb tandem duplication card: one arc of 79 tumor split reads from the end of the copy back to its start, none in the normal" width="100%"></a><br>A 208 kb tandem duplication</td><td width="50%"><a href="https://jbrowse.org/demos/colo829_review/#card=297"><img src="gallery/gene-fusion.png" alt="A breakend card annotated as an LRRC3B gene fusion with HIGH impact: 59 tumor split reads join the two ends, none in the normal" width="100%"></a><br>An LRRC3B gene fusion</td></tr>
+</table>
+
+The image scales to fit the window; click it, or press <kbd>f</kbd>, for full
+size. A `jb2export` of 5.0.0-beta.22 or older stacks a translocation's
+chromosomes as the panels of a breakpoint split view instead.
+
+## Read counts
+
+- **The caller's counts** group the queue, so `--support` is required. It names
+  the FORMAT keys the caller counts supporting reads under, the sample's first.
   - `--support AD,NAD` reads nanomonsv's tumor and normal counts from one
     column, and `--support TUMOR:AD,NORMAL:AD` reads `AD` from two.
-  - Without `--support`, the build stops and lists the VCF's samples and numeric
-    FORMAT keys to choose from.
-  - The support filter splits a callset into calls with no supporting read,
-    calls with supporting reads in a control too, and calls supported in the
-    sample alone.
-- **jb2export's counts, as a second opinion.** `jb2export` reports the split
-  reads joining an image's windows. Where a record's ALT spells out the change
-  (an SNV, an indel, a deletion or an insertion), it also reports the reads with
-  the ALT out of the reads covering it. A deletion drawn as two windows gets
-  both counts, printed as `3 split + 4 gapped of 56 reads`.
-  - The card shows these counts beside the caller's, so a reviewer can spot a
-    split read in the normal that the caller did not count.
-  - They can also come out lower than the caller's. On COLO829, `d_163` and
-    `d_38` have zero here, because their reads have the deletion a few bases
-    right of the caller's position, where nanomonsv's `AD` counts 3 and 4.
-  - For a VCF without read counts, `--support jb2export` groups the queue by
-    these counts instead.
-- **What the caller wrote.** The record's `SVTYPE`, size, `FILTER` and `QUAL`,
-  its sample columns (`AF`, `AD`, `DP`, whatever the caller's `FORMAT` holds)
-  and, under **VCF record**, every `INFO` key. Hover a key or a filter for the
-  header's description of it.
-- **Genes.** For a VCF annotated by SnpEff (`ANN`) or VEP (`CSQ`), the card
-  shows the genes, the effect and the protein change (`p.Val600Glu`) of the
-  highest-impact annotation. The header gets an impact filter, and search covers
-  all three.
-- **Facets.** `--facet CLNSIG,CLNDN` prints those `INFO` keys on every card and
-  adds a filter for each to the header. The header has a `FILTER` filter already
-  when the callset holds more than one `FILTER` value.
-- **A caller's `EVENT` is a filter**, and the chip on a card selects it. An
-  event with more than two loci also gets a separate card that draws every locus
-  in one image. JBrowse reads the standard `EVENT` key, and
-  [Severus's `CLUSTERID` needs renaming to it](https://jbrowse.org/jb2/docs/user_guides/sv_inspector_view/#rearrangement-events).
+  - Left out, the build stops and lists the VCF's samples and numeric FORMAT
+    keys.
+  - The support filter splits the queue into calls with no supporting read,
+    calls supported in a control too, and calls supported in the sample alone.
+- **jb2export's counts** sit beside the caller's as a second opinion: the split
+  reads joining the windows, and, where the ALT spells out the change, the reads
+  with the ALT of those covering it (`3 split + 4 gapped of 56 reads`).
+  - They can show a split read in the normal that the caller did not count.
+  - They can also come out lower. On COLO829, `d_163` and `d_38` count zero
+    here, because their reads place the deletion a few bases right of the
+    caller's position.
+  - `--support jb2export` groups on these counts, for a VCF that has none.
+
+## What the caller wrote
+
+- **The record**: `SVTYPE`, size, `FILTER`, `QUAL` and the sample columns, and
+  under **VCF record** every `INFO` key. Hover a key for the header's
+  description.
+- **Genes**: for a VCF annotated by SnpEff (`ANN`) or VEP (`CSQ`), the genes,
+  effect and protein change (`p.Val600Glu`) of the highest-impact annotation,
+  with an impact filter in the header.
+- **Facets**: `--facet CLNSIG,CLNDN` prints those `INFO` keys on every card and
+  adds a filter for each. `FILTER` is one already when the callset holds more
+  than one value.
+- **Events**: a caller's `EVENT` is a filter, and the chip on a card selects it.
+  Severus's `CLUSTERID`
+  [needs renaming to `EVENT`](https://jbrowse.org/jb2/docs/user_guides/sv_inspector_view/#rearrangement-events).
 - **A link**, given `--jbrowse` and `--config`: see
   [Links back into JBrowse](rendering.md#links-back-into-jbrowse).
