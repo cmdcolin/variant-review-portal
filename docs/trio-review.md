@@ -1,9 +1,9 @@
 # Reviewing a trio
 
-A trio VCF and a pedigree give a queue of the sites where the child's genotype
-cannot be made of one gamete from each parent. The portal's Mendelian check
-flags those sites; checking one means the child's and both parents' reads at it.
-The portal draws the three in one picture a site, so the queue can be finished.
+`variant-review-trio-sites` reads a trio VCF and its pedigree and keeps the
+sites where the child's genotype cannot be made of one gamete from each parent.
+A reviewer checks each site in the child's and both parents' reads, so the
+portal draws all three in one picture per site.
 
 ```bash
 # the sites the Mendelian check flags, de novo candidates and Mendelian
@@ -46,29 +46,31 @@ track's relationship labels need a `jb2export` newer than 5.0.0-beta.22.
   among them too. A VCF holding more than one takes `--child` to pick it. A
   child with one parent in the VCF is a duo, and one whose father and mother are
   the same sample is a selfed line.
-- **`--transmission`** is a JSON list in the shape of the assembly's
+- **`--transmission`** is a JSON list in the format of the assembly's
   `transmission` slot, `{ "refName", "sex", "from" }`, for the contigs a child
   does not inherit one copy from each parent: sex chromosomes, organelles,
-  haplodiploid males. `refName` matches the VCF's `CHROM` exactly. Left out,
-  every contig takes the autosomal rule, which reads a hemizygous male X call as
+  haplodiploid males. `refName` matches the VCF's `CHROM` exactly. Without it,
+  every contig follows the autosomal rule, so a hemizygous male X call counts as
   a violation.
 - **The alignments tracks** are one `jb2export batch` run, the child's track
-  first. `--images` names each by its VCF sample, so the portal knows whose
-  reads each count is. A track left out (a parent with no reads) leaves that
-  member's read column empty.
+  first. `--images` names each by its VCF sample, so the portal can match each
+  read count to its sample. A track left out (a parent with no reads) leaves
+  that member's read column empty.
 
 ## The classifier
 
-Both commands run `lib/classifyTrio.mjs`: any ploidy, read from the genotype; a
-duo the known parent cannot settle is no call; `either`, polyploid and aneuploid
-splits never report a violation. The check ignores phase. It splits a flagged
-site into a de novo candidate, an allele in neither parent, or a Mendelian
-violation, which orders the queue and picks the verdicts a card offers.
+`variant-review-trio-sites` and `variant-review-portal` both run
+`lib/classifyTrio.mjs`, which handles any ploidy, read from each genotype, and
+ignores phase. A duo whose known parent cannot settle a site is no call, and
+`either`, polyploid and aneuploid splits never report a violation. The
+classifier splits a flagged site into a de novo candidate, with an allele in
+neither parent, or a Mendelian violation; the class orders the queue and sets
+the verdicts a card offers.
 
-JBrowse itself runs no check: its trio tutorial colors the calls by
-`bcftools +mendelian2 -m a`'s `INFO/MERR`, the number of trios in error, which
-has no such split. On the KHV trio over chr1:190-200 Mb both flag the same 173
-sites.
+JBrowse's trio tutorial colors the calls by the `INFO/MERR` that
+`bcftools +mendelian2 -m a` writes, the number of trios in error, which puts de
+novo candidates and other violations together. On the KHV trio over chr1:190-200
+Mb, bcftools and the classifier flag the same 173 sites.
 
 ## The queue
 
@@ -82,11 +84,11 @@ each in position order.
 ## A card
 
 - **One image**: the calls track, then the child's, father's and mother's reads
-  at the site, each track named by its config, which writes sample and
-  relationship (`HG02024 (daughter)`).
+  at the site, each track labeled with the sample and relationship its config
+  names (`HG02024 (daughter)`).
 - **The trio's calls**: each member's sample, relationship, `GT` and whatever
   else its `FORMAT` holds (`DP`, `AD`, `GQ`), beside the reads `jb2export`
-  counted with the record's ALT over the reads covering it.
+  counted with the record's ALT out of the reads covering it.
 - **The class and why**: the allele in neither parent for a de novo candidate
   (`G is in neither parent`), or the parent the child shares no allele with for
   a Mendelian violation (`nothing from the father's T/T`).
@@ -97,33 +99,34 @@ each in position order.
 
 [![A de novo candidate card at chr1:193,838,143: the daughter called 1|0 with C in 15 of her 39 reads, both parents 0|0 with C in none of theirs, and the verdict set to Real de novo](gallery/trio-de-novo.png)](https://jbrowse.org/demos/khv_trio_review/#card=66)
 
-## The reads say
+## Read support
 
-For a substitution whose allele in neither parent is its ALT, or the REF of a
-site with one ALT (counted as the reads without the ALT), the support filter
-sorts the de novo candidates three ways:
+The support filter splits the de novo candidates by the reads with the allele
+that is in neither parent. The portal counts that allele at a substitution where
+it is the ALT, or the REF at a site with one ALT (as the reads without the ALT):
 
-- **no read in the child has it**: a child miscall, most likely
-- **a parent's reads have it too**: a parental allele the calls missed, or one
-  stray read
-- **only the child's reads have it**: the candidates left standing
+- **no read in the child has the allele**: most likely a child miscall
+- **a parent's reads have the allele too**: a parental allele the calls missed,
+  or one stray read
+- **only the child's reads have the allele**: the candidates that remain
 
-An indel stays uncounted: an aligner often places it a few bases from the
-record's column, where the count misses it. So does a Mendelian violation, which
-has no allele in neither parent. The picture decides a card; the grouping orders
-the queue. Here the father is called `0|0`, yet 19 of his 36 reads carry the
+The portal leaves indels uncounted, because an aligner often places an indel a
+few bases from the record's column, outside the count. A Mendelian violation is
+uncounted too, since none of its alleles is missing from both parents. The
+reviewer judges each card from the picture, and the grouping only orders the
+queue. Here the father is called `0|0`, yet 19 of his 36 reads have the
 daughter's T:
 
 [![A de novo candidate card at chr1:190,014,025: the daughter 1|0 with T in 18 of 34 reads, the father called 0|0 yet with T in 19 of his 36, and the verdict set to Missed in father](gallery/trio-missed-het.png)](https://jbrowse.org/demos/khv_trio_review/#card=21)
 
 ## The table and the TSV
 
-The table is sectioned by class, with each member's `GT` and read count in a
+The table has a section per class, with each member's `GT` and read count in a
 column named by its sample. Export adds `trio_class` and `genotypes`
 (`HG02024=0|1;HG02026=0|0;HG02025=0|0`) to the TSV, and Import reads the trio
 verdicts back.
 
-[![The KHV trio portal as a table filtered to the 14 de novo candidates whose allele only the child's reads carry, each with the daughter's, father's and mother's GT and read count](gallery/trio-table.png)](https://jbrowse.org/demos/khv_trio_review/#support=sample&view=table)
+[![The KHV trio portal as a table filtered to the 14 de novo candidates with the allele in the child's reads alone, each with the daughter's, father's and mother's GT and read count](gallery/trio-table.png)](https://jbrowse.org/demos/khv_trio_review/#support=sample&view=table)
 
 ## The KHV trio
 
@@ -134,16 +137,16 @@ chr1:190-200 Mb, rendered with `--jobs 4` in about 30 seconds from the bucket.
 - **The Mendelian violations** are mostly the CFHR1 deletion: at 69 sites from
   196,807,156 to 196,835,670 the father is `1|1` on about half his depth and the
   daughter `0|0` on about half hers, a one-copy sample called homozygous.
-- **The de novo candidates**, a random sample of 30 read by eye:
+- **The de novo candidates**, in a random sample of 30 checked by eye:
   - 8 a missed parental het: the child's allele in a parent's reads at the site
-  - 6 an indel at the site in a parent's reads and the child's, which the call
-    writes as a different allele
+  - 6 an indel at the site in a parent's reads and the child's, which the caller
+    wrote as a different allele
   - 11 a child miscall, the child's reads lacking the allele or homozygous where
     the call is het
   - 2 in the child's reads alone (chr1:193,838,143 and chr1:195,271,263)
   - 3 unclear, a parent with one read of the allele or a repeat
 
-The first of the CFHR1 sites, the father's 15 reads and the daughter's 12
-against the mother's 23:
+At the first of the CFHR1 sites, the father has 15 reads and the daughter 12, to
+the mother's 23:
 
 [![A Mendelian violation card at chr1:196,807,156 in the CFHR1 deletion: the father 1|1 on 15 reads, the daughter 0|0 on 12, and the verdict set to Copy-number change](gallery/trio-copy-number.png)](https://jbrowse.org/demos/khv_trio_review/#card=100)

@@ -1,11 +1,12 @@
 # Rendering and building
 
-A portal is built in two steps: `jb2export batch` draws one image a record, and
-`variant-review-portal` turns those images and the VCF into a page.
+A portal is built in two steps: `jb2export batch` draws one image per record,
+and `variant-review-portal` turns those images and the VCF into a page.
 
 ```bash
 # every alignments track in one run, so each record is one image; genes, the
-# callset and repeats beside them say what a call hits and what it sits in
+# callset and repeats beside them show which genes a call hits and which
+# repeats it lies in
 jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \
   --track genes height:50 --track calls height:50 \
   --track tumor_reads height:150 --track normal_reads height:150 \
@@ -49,5 +50,5 @@ portal/
   reads/          with variant-review-slice: the sliced reads
 ```
 
-Nothing points outside the directory, so `aws s3 sync portal/ s3://…` is the
-whole deployment.
+Every path in the portal is relative to its directory, so
+`aws s3 sync portal/ s3://…` deploys the whole portal.

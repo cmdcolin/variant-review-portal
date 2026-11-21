@@ -2,8 +2,9 @@
 
 React, react-dom and esbuild build the page, and
 [`@gmod/vcf`](https://www.npmjs.com/package/@gmod/vcf) reads the callset. The
-page is [gene-review-portal](https://github.com/cmdcolin/gene-review-portal)'s,
-carried over to variants.
+page started as
+[gene-review-portal](https://github.com/cmdcolin/gene-review-portal)'s, adapted
+to variants.
 
 ## Test
 
