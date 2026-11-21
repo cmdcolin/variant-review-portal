@@ -63,17 +63,17 @@
     {
       "type": "VariantTrack",
       "trackId": "khv_trio_calls",
-      "name": "KHV trio phased calls (chr1)",
+      "name": "KHV trio GATK calls (chr1:190-200 Mb)",
       "assemblyNames": ["hg38"],
       "adapter": {
         "type": "VcfTabixAdapter",
         "vcfGzLocation": {
-          "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1.merr.vcf.gz",
+          "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1_190_200.gatk.merr.vcf.gz",
           "locationType": "UriLocation"
         },
         "index": {
           "location": {
-            "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1.merr.vcf.gz.tbi",
+            "uri": "https://jbrowse.org/demos/kgp-trio/HG02024_VN049_KHVTrio.chr1_190_200.gatk.merr.vcf.gz.tbi",
             "locationType": "UriLocation"
           },
           "indexType": "TBI"
