@@ -122,6 +122,111 @@
           "locationType": "UriLocation"
         }
       }
+    },
+    {
+      "type": "FeatureTrack",
+      "trackId": "hg008t_somatic_cnv",
+      "name": "HG008-T somatic CNV",
+      "assemblyNames": ["GRCh38_GIABv3"],
+      "adapter": {
+        "type": "BedAdapter",
+        "bedLocation": {
+          "uri": "https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data_somatic/HG008/Liss_lab/analysis/NIST_HG008-T_somatic-stvar-CNV_DraftBenchmark_V0.5-20260318/GRCh38_HG008-T-V0.5_somatic-CNV_PASS.draftbenchmark.calls.bed",
+          "locationType": "UriLocation"
+        },
+        "columnNames": [
+          "chrom",
+          "start",
+          "end",
+          "total_copy_number",
+          "hap1_copy_number",
+          "hap2_copy_number",
+          "name"
+        ]
+      },
+      "displayDefaults": {
+        "labels": {
+          "name": "jexl:'CN '+get(feature,'total_copy_number')+' ('+get(feature,'hap1_copy_number')+'|'+get(feature,'hap2_copy_number')+')'"
+        },
+        "encoding": {
+          "color": {
+            "field": "total_copy_number",
+            "scale": {
+              "type": "threshold",
+              "domain": ["1", "2", "3", "4"],
+              "range": ["#2166ac", "#92c5de", "#e0e0e0", "#f4a582", "#b2182b"],
+              "names": ["CN 0", "CN 1", "CN 2", "CN 3", "CN 4+"]
+            },
+            "legend": {
+              "title": "Copy number"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "QuantitativeTrack",
+      "trackId": "HG008_log2ratio",
+      "name": "HG008 log2(tumor/normal) coverage ratio",
+      "assemblyNames": ["GRCh38_GIABv3"],
+      "adapter": {
+        "type": "BigWigAdapter",
+        "bigWigLocation": {
+          "uri": "https://jbrowse.org/demos/cgiab/HG008_log2ratio.bw",
+          "locationType": "UriLocation"
+        }
+      },
+      "displays": [
+        {
+          "type": "LinearWiggleDisplay",
+          "displayId": "HG008_log2ratio-LinearWiggleDisplay",
+          "mark": {
+            "type": "point",
+            "extent": "none"
+          },
+          "encoding": {
+            "size": 1,
+            "y": {
+              "scale": {
+                "domainMin": -2,
+                "domainMax": 2
+              }
+            }
+          },
+          "height": 120
+        }
+      ]
+    },
+    {
+      "type": "QuantitativeTrack",
+      "trackId": "HG008-T_baf",
+      "name": "HG008-T B-allele frequency (BAF)",
+      "assemblyNames": ["GRCh38_GIABv3"],
+      "adapter": {
+        "type": "BigWigAdapter",
+        "bigWigLocation": {
+          "uri": "https://jbrowse.org/demos/cgiab/HG008-T_baf.bcftools.bw",
+          "locationType": "UriLocation"
+        },
+        "resolutionMultiplier": 0.001
+      },
+      "displays": [
+        {
+          "type": "LinearWiggleDisplay",
+          "displayId": "HG008-T_baf-LinearWiggleDisplay",
+          "mark": "point",
+          "encoding": {
+            "size": 1,
+            "y": {
+              "scale": {
+                "domainMin": 0,
+                "domainMax": 1
+              }
+            }
+          },
+          "height": 120
+        }
+      ]
     }
   ]
 }

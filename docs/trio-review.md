@@ -172,7 +172,8 @@ verdicts back.
 
 [jbrowse.org/demos/khv_trio_review](https://jbrowse.org/demos/khv_trio_review/)
 is the run above: 91 de novo candidates and 82 Mendelian violations over
-chr1:190-200 Mb, rendered with `--jobs 4` in about 30 seconds from the bucket.
+chr1:190-200 Mb, rendered with `--jobs 4` from the bucket in about a minute, and
+its wide run in two and a half.
 
 - **The Mendelian violations** are mostly the CFHR1 deletion: at 69 sites from
   196,807,156 to 196,835,670 the father is `1|1` on about half his depth and the

@@ -53,6 +53,9 @@ Options:
   --context   <dir>: a jb2export batch --outDir holding manifest.tsv, drawn
               zoomed out with a wide --flank, shown in a panel under each
               card's images. Its tracks are not counted. Repeatable
+  --overview  <png>: one image over the whole genome, such as jb2export's
+              copy number and B-allele frequency over every chromosome, in a
+              panel above the queue
   --out       directory to write the portal to
   --title     page heading (default: the VCF's file name)
   --support   required but for a trio queue: the FORMAT keys the caller
@@ -93,6 +96,7 @@ const { values } = parseArgs({
     vcf: { type: 'string' },
     images: { type: 'string', multiple: true },
     context: { type: 'string', multiple: true },
+    overview: { type: 'string' },
     out: { type: 'string' },
     title: { type: 'string' },
     facet: { type: 'string', multiple: true },
@@ -139,6 +143,9 @@ const sets = images.map(arg => {
     rows: readManifest(dir),
   }
 })
+if (values.overview && !fs.existsSync(values.overview)) {
+  fail(`${values.overview} not found: render it with jb2export --out`)
+}
 const contexts = (values.context ?? []).map(dir => ({
   name: `context_${path.basename(path.resolve(dir))}`,
   dir,
@@ -262,6 +269,15 @@ for (const card of cards) {
   }
 }
 
+const overview = values.overview && {
+  src: `img/overview${path.extname(values.overview)}`,
+  ...pngSize(values.overview),
+}
+if (overview) {
+  fs.mkdirSync(path.join(out, 'img'), { recursive: true })
+  fs.copyFileSync(values.overview, path.join(out, overview.src))
+}
+
 // A facet every card agrees on filters nothing, and one with a value a card
 // (an inserted sequence, a free-text field) is a search box, not a select.
 const FACET_VALUES_MAX = 40
@@ -311,6 +327,7 @@ const data = {
   facets: facetOptions(cards),
   describe: describeKeys(vcfText, cards),
   cards,
+  overview,
   footer: `Images by jb2export batch. Verdicts stay in this browser until exported.`,
 }
 fs.mkdirSync(out, { recursive: true })

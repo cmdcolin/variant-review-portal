@@ -424,7 +424,8 @@
         font-size: 12px;
       }
       details.record summary,
-      details.context summary {
+      details.context summary,
+      details.overview summary {
         cursor: pointer;
         color: GrayText;
         width: fit-content;
@@ -434,6 +435,16 @@
       }
       details.context[open] summary {
         padding-bottom: 4px;
+      }
+      details.overview {
+        margin-bottom: 12px;
+        font-size: 13px;
+      }
+      details.overview img {
+        display: block;
+        width: 100%;
+        height: auto;
+        background: #fff;
       }
       .fields {
         margin: 8px 0 0;

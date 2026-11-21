@@ -73,6 +73,46 @@ variant-review-portal --vcf calls.vcf.gz --images tumor,normal=reads \
 Set `maxScore` above the deepest sample's coverage.
 [Reviewing a trio](trio-review.md) has an example.
 
+### Copy number and B-allele frequency
+
+A context run need not draw reads. A tumor's copy-number segments, its log2
+tumor/normal depth ratio and its B-allele frequency over a few megabases show
+whether an SV sits in a gain, a loss or a run of loss of heterozygosity (LOH),
+where the BAF of the germline het sites splits away from 0.5 or collapses to 0
+and 1. They are bigWigs and BEDs, so 4 Mb a card renders in seconds.
+[`examples/hg008/config.json`](../examples/hg008/config.json) carries HG008-T's
+from the [Cancer GIAB](https://jbrowse.org/jb2/docs/tutorials/cnv_cgiab/)
+tutorial: the draft benchmark's copy number per haplotype, the log2 ratio and
+the BAF.
+
+```bash
+jb2export batch --sites hg008.vcf.gz --config examples/hg008/config.json \
+  --assembly GRCh38_GIABv3 --track hg38_ncbiRefSeq_ucsc height:60 \
+  --track hg008t_benchmark_sv height:40 --track hg008t_somatic_cnv height:40 \
+  --track HG008_log2ratio height:90 --track HG008-T_baf height:90 \
+  --flank 2000000 --outDir cn --manifest
+```
+
+![A 164 kb tandem duplication on chr5 drawn 4 Mb wide: the benchmark's copy number 1 (0|1) on either side and 2 (0|2) across the duplication, the log2 ratio stepping up across it, and the BAF at 1 throughout, a run of LOH](gallery/hg008-copy-number.png)
+
+### The whole genome
+
+`--overview <png>` puts one image above the queue, in a **Genome overview**
+panel: the same tracks over every chromosome, which say before the first card
+what kind of genome the calls are in, HG008-T's losses of whole arms and its
+long runs of LOH. A bigWig draws its zoomed-out summary there, so the image
+takes about 10 s.
+
+```bash
+jb2export --config examples/hg008/config.json --assembly GRCh38_GIABv3 \
+  --loc "$(printf 'chr%s ' {1..22} X)" --track hg008t_somatic_cnv height:40 \
+  --track HG008_log2ratio height:90 --track HG008-T_baf height:90 \
+  --width 1600 --out genome.png
+
+variant-review-portal --vcf hg008.vcf.gz --images tumor,normal=reads \
+  --context cn --overview genome.png --support jb2export --out portal
+```
+
 ## Images rendered apart
 
 Repeat `--images`, one directory per run, and a card stacks them. The first

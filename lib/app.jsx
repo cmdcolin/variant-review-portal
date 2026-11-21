@@ -272,27 +272,29 @@ const Card = React.memo(function Card({
           />
         </figure>
       ))}
-      {card.context.map(img => (
-        <details
-          className="context"
-          key={`${img.name}:${contextOpen}`}
-          open={contextOpen}
-        >
-          <summary>
-            Zoomed out
-            {img.bp === undefined
-              ? ''
-              : ` · ${sizeLabel(img.bp)} · ${img.locs.join(' ↔ ')}`}
-          </summary>
-          <Shot
-            img={img}
-            alt={`Zoomed-out view of ${card.title}`}
-            url={card.url}
-            zoomed={zoomed}
-            onZoom={setZoomed}
-          />
-        </details>
-      ))}
+      {card.context
+        .filter(img => img.status !== 'absent')
+        .map(img => (
+          <details
+            className="context"
+            key={`${img.name}:${contextOpen}`}
+            open={contextOpen}
+          >
+            <summary>
+              Zoomed out
+              {img.bp === undefined
+                ? ''
+                : ` · ${sizeLabel(img.bp)} · ${img.locs.join(' ↔ ')}`}
+            </summary>
+            <Shot
+              img={img}
+              alt={`Zoomed-out view of ${card.title}`}
+              url={card.url}
+              zoomed={zoomed}
+              onZoom={setZoomed}
+            />
+          </details>
+        ))}
       {card.info.length ? (
         <details className="record">
           <summary>VCF record</summary>
@@ -1376,6 +1378,18 @@ export function App({ data }) {
       </header>
 
       <main data-fit={fit} data-view={view}>
+        {data.overview ? (
+          <details className="overview">
+            <summary>Genome overview</summary>
+            <img
+              loading="lazy"
+              alt="The whole genome, as the overview image draws it"
+              src={data.overview.src}
+              width={data.overview.width}
+              height={data.overview.height}
+            />
+          </details>
+        ) : null}
         {!visible.length ? (
           <div className="empty">No cards match these filters.</div>
         ) : view === 'table' ? (
