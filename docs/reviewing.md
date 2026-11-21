@@ -35,8 +35,7 @@ or by any number in the caller's sample column.
 One cause, such as a deletion, can flag many neighboring sites. Shift-click a
 second card or row, or press <kbd>J</kbd> or <kbd>K</kbd>, to select every card
 from the cursor to there. An answer then applies to the whole selection. In the
-table, sorted by position, such a run is a block of rows with the same
-genotypes.
+table, sorted by position, such a run is a block of neighboring rows.
 
 ## Asking your own question
 

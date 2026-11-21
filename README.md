@@ -1,10 +1,10 @@
 # variant-review-portal
 
 Turn the images `jb2export batch` renders from a VCF into a **static review
-portal**: one card per record, with the sample's and its control's reads in one
-image, the record's VCF fields, an answer to one question per card, and a link
-that opens the same loci live in JBrowse. A reviewer works through the queue by
-keyboard and exports the answers as TSV.
+portal**. Each record gets a card: the sample's and its control's reads in one
+image, its VCF fields, a question to answer, and a link that opens the loci live
+in JBrowse. A reviewer works through the queue by keyboard and exports the
+answers as TSV.
 
 | Scenario                                             | Hosted portal                                                                                                                  | Guide                                   |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |

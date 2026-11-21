@@ -38,11 +38,10 @@ variant-review-portal --vcf sites.vcf \
   --images HG02024,HG02026,HG02025=reads --context wide --out portal
 ```
 
-[`examples/khv_trio/config.json`](../examples/khv_trio/config.json) is the
-config: the 1000 Genomes trio's phased chr1 calls with the pedigree, colored by
-the `INFO/MERR` that `bcftools +mendelian2 -m a` writes, and each member's 30x
-CRAM from the project's bucket, named by sample and relationship. The calls
-track's relationship labels need a `jb2export` newer than 5.0.0-beta.22.
+[`examples/khv_trio/config.json`](../examples/khv_trio/config.json) holds the
+1000 Genomes trio's phased chr1 calls, colored by the `INFO/MERR` of
+`bcftools +mendelian2 -m a`, and each member's 30x CRAM, named by sample and
+relationship. Those labels need a `jb2export` newer than 5.0.0-beta.22.
 
 Each reads track grows to 1000 px, so every read of a 30x member is in the
 picture ([Reads track options](rendering.md#reads-track-options)).
@@ -103,12 +102,11 @@ candidate**, with an allele in neither parent, or a **Mendelian violation**.
 
 ## The queue
 
-`variant-review-trio-sites` writes the records whose class is in `--classes`,
-`deNovoCandidate,mendelianViolation` by default, in the VCF's order and with its
-header, so the file is still a VCF for `jb2export` and the portal. `consistent`
-and `unsettled` (a no-call leaves the check open) are the other classes. The
-portal orders the cards de novo candidates first, then Mendelian violations,
-each in position order.
+`variant-review-trio-sites` keeps the records whose class is in `--classes`, in
+the VCF's order and with its header. The default is
+`deNovoCandidate,mendelianViolation`; `consistent` and `unsettled` (a no-call
+leaves the check open) are the others. The portal shows de novo candidates
+first, then Mendelian violations, each in position order.
 
 ## A card
 
