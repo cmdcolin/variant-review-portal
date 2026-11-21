@@ -39,9 +39,9 @@ chromosomes as the panels of a breakpoint split view instead.
   reads joining the windows, and, where the ALT spells out the change, the reads
   with the ALT of those covering it (`3 split + 4 gapped of 56 reads`).
   - They can show a split read in the normal that the caller did not count.
-  - They can also come out lower. On COLO829, `d_163` and `d_38` count zero
-    here, because their reads place the deletion a few bases right of the
-    caller's position.
+  - They can come out lower: on COLO829, `d_163` and `d_38` count zero here,
+    because their reads place the deletion a few bases right of the caller's
+    position.
   - `--support jb2export` groups on these counts, for a VCF that has none.
 
 ## What the caller wrote

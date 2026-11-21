@@ -4,19 +4,19 @@ Each card asks one question, **Is the call real?**, with its answers as buttons
 under the images, each showing its key. A trio card asks **What do the trio's
 reads show?** instead. **Clear** takes the answer back.
 
-| Key                         | Does                                                |
-| --------------------------- | --------------------------------------------------- |
-| <kbd>j</kbd> <kbd>k</kbd>   | next, previous card                                 |
-| <kbd>1</kbd>, <kbd>2</kbd>… | answer the card under the cursor                    |
-| <kbd>0</kbd>                | clear its answer                                    |
-| <kbd>J</kbd> <kbd>K</kbd>   | select a run of cards; <kbd>Esc</kbd> drops it      |
-| <kbd>n</kbd>                | write a note                                        |
-| <kbd>o</kbd>                | open the card in JBrowse                            |
-| <kbd>z</kbd> <kbd>Z</kbd>   | the zoomed-out view on this card, on every card     |
-| <kbd>t</kbd>                | cards or table; <kbd>Enter</kbd> opens a row's card |
-| <kbd>f</kbd>                | fit images to the window, or full size              |
-| <kbd>/</kbd>                | search                                              |
-| <kbd>?</kbd>                | show these keys                                     |
+| Key                         | Does                                                              |
+| --------------------------- | ----------------------------------------------------------------- |
+| <kbd>j</kbd> <kbd>k</kbd>   | next, previous card                                               |
+| <kbd>1</kbd>, <kbd>2</kbd>… | answer the card under the cursor                                  |
+| <kbd>0</kbd>                | clear its answer                                                  |
+| <kbd>J</kbd> <kbd>K</kbd>   | select a run of cards; <kbd>Esc</kbd> drops it                    |
+| <kbd>n</kbd>                | write a note                                                      |
+| <kbd>o</kbd>                | open the card in JBrowse                                          |
+| <kbd>z</kbd> <kbd>Z</kbd>   | the zoomed-out view on this card, on every card, with `--context` |
+| <kbd>t</kbd>                | cards or table; <kbd>Enter</kbd> opens a row's card               |
+| <kbd>f</kbd>                | fit images to the window, or full size                            |
+| <kbd>/</kbd>                | search                                                            |
+| <kbd>?</kbd>                | show these keys                                                   |
 
 With the verdict filter on **Unreviewed**, each card leaves the queue once
 answered. The URL holds the filters, the order and the card under the cursor, so
