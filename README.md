@@ -3,9 +3,7 @@
 Turn the images `jb2export batch` renders from a VCF into a **static review
 portal**: one card per record, with the sample and its control in one image, the
 record's VCF fields, a verdict, and a link that opens the same loci live in
-JBrowse. It handles structural variants and small variants alike, and a trio's
-de novo candidates and Mendelian violations with the child's and both parents'
-reads.
+JBrowse.
 
 A caller returns hundreds of variants, and the reads at each one show whether it
 is real. With a picture of those reads on every card, a reviewer judges the
@@ -13,13 +11,11 @@ calls one after another and exports the verdicts.
 
 ## Scenarios
 
-| Scenario                                             | Each card's image                                                                                                              | Hosted portal                                                                                                                  | Guide                                                       |
+| Scenario                                             | Image on each card                                                                                                             | Hosted portal                                                                                                                  | Guide                                                       |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
 | Somatic structural variants, tumor vs normal         | The tumor's reads above the matched normal's at each end of the call, with the split reads joining the ends drawn between them | [COLO829](https://jbrowse.org/demos/colo829_review/) on ONT, [HG008-T](https://jbrowse.org/demos/hg008_review/) on PacBio HiFi | [Structural variants](#structural-variants-tumor-vs-normal) |
 | Somatic small variants, tumor vs normal              | The tumor's and the normal's pileups sorted at the variant's base, the reads with the ALT on top                               | [COLO829 coding variants](https://jbrowse.org/demos/colo829_snv_review/) on ONT                                                | [Small variants](#small-variants-tumor-vs-normal)           |
 | A trio's de novo candidates and Mendelian violations | The child's reads above the father's and the mother's                                                                          | [1000 Genomes KHV trio](https://jbrowse.org/demos/khv_trio_review/), chr1:190-200 Mb on 30x Illumina                           | [Trios](#trios)                                             |
-
-Click a gallery picture below to open its card in the hosted portal.
 
 ## Install
 
@@ -47,15 +43,17 @@ npx serve portal
 tumor's first. The portal groups the queue by those counts into calls with no
 supporting read, calls with supporting reads in the normal too, and calls
 supported in the tumor alone. `jb2export` draws a record's loci side by side in
-one row:
+one row.
 
-| SV class           | The card shows                                                                              |
-| ------------------ | ------------------------------------------------------------------------------------------- |
-| Deletion           | The tumor's coverage drops between the ends, and split reads and reads with a gap span them |
-| Tandem duplication | An arc of split reads from the end of the copy back to its start                            |
-| Inversion          | An arc of split reads between the two ends                                                  |
-| Translocation      | Both chromosomes' windows in one row, with an arc of split reads from one to the other      |
-| Complex event      | A separate card with every locus of the caller's `EVENT` in one image                       |
+| SV class           | The card shows                                                                          |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| Deletion           | The tumor's coverage drops between the ends; split reads and reads with a gap span them |
+| Tandem duplication | An arc of split reads from the end of the copy back to its start                        |
+| Inversion          | An arc of split reads between the two ends                                              |
+| Translocation      | Both chromosomes' windows in one row, with an arc of split reads from one to the other  |
+| Complex event      | A separate card with every locus of the caller's `EVENT` in one image                   |
+
+Click a picture to open its card in the hosted portal.
 
 <table>
 <tr><td width="50%"><a href="https://jbrowse.org/demos/hg008_review/#card=event%3Acluster_12"><img src="docs/gallery/complex-event.png" alt="A caller's event card on chr17: two records over four loci, a tandem duplication and an inversion whose arcs interleave across one picture, joined by 128 tumor split reads and none in the normal" width="100%"></a><br>A duplication and an inversion, interleaved on chr17</td><td width="50%"><a href="https://jbrowse.org/demos/hg008_review/#card=115"><img src="docs/gallery/inversion.png" alt="An inversion card joining chr5 at 20 Mb to chr5 at 156 Mb: one arc of 113 tumor split reads between the two ends, none in the normal, and the verdict set to Real" width="100%"></a><br>An inversion across 136 Mb of chr5</td></tr>
@@ -69,7 +67,7 @@ one row:
 The commands for structural variants build a portal from a VCF of SNVs and
 indels too. A card is one window around the variant: `jb2export` sorts each
 pileup at the variant's base, marks the bases the record changes, and counts the
-reads with the ALT over the reads covering it. For a VCF annotated by SnpEff or
+reads with the ALT and the reads covering it. For a VCF annotated by SnpEff or
 VEP, the card also shows the gene, the effect and the protein change.
 
 <table>
@@ -79,9 +77,9 @@ VEP, the card also shows the gene, the effect and the protein change.
 ## Trios
 
 From a trio VCF and its pedigree, `variant-review-trio-sites` picks the sites
-where the child's genotype breaks Mendelian inheritance. The portal shows one
-card per site with the child's and both parents' reads, de novo candidates
-first.
+where the child's genotype is inconsistent with Mendelian inheritance. The
+portal shows one card per site with the child's and both parents' reads, de novo
+candidates first.
 
 ```bash
 variant-review-trio-sites --vcf trio.vcf.gz --pedigree trio.ped --out sites.vcf
