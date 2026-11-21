@@ -73,6 +73,35 @@ const unsaid = build([])
 assert.equal(unsaid.status, 1)
 assert.match(unsaid.stderr, /needs --support/)
 assert.match(unsaid.stderr, /--support jb2export/)
+const questionFile = path.join(dir, 'question.json')
+fs.writeFileSync(
+  questionFile,
+  JSON.stringify({
+    question: 'Does the tumor support the call?',
+    answers: [
+      { label: 'Supports', key: 's', tone: 'real' },
+      { label: 'Does not support', key: 'n' },
+    ],
+  }),
+)
+const clash = build(['--support', 'jb2export', '--question', questionFile])
+assert.equal(clash.status, 1)
+assert.match(clash.stderr, /keyed n, which the page binds to note/)
+fs.writeFileSync(
+  questionFile,
+  JSON.stringify({
+    question: 'Does the tumor support the call?',
+    answers: [
+      { label: 'Supports', key: 's', tone: 'real' },
+      { label: 'Does not support', key: 'd' },
+    ],
+  }),
+)
+const asked = build(['--support', 'jb2export', '--question', questionFile])
+assert.equal(asked.status, 0, asked.stderr)
+const askedHtml = fs.readFileSync(path.join(out, 'index.html'), 'utf8')
+assert.match(askedHtml, /Does the tumor support the call\?/)
+assert.match(askedHtml, /data-v="Does not support"/)
 assert.equal(build(['--support', 'jb2export']).status, 0)
 
 // a trio queue: a de novo candidate and a Mendelian violation, each one image
@@ -150,7 +179,17 @@ try {
   )
   assert.equal(await count('header select[data-facet]'), 0)
 
+  assert.match(await text('.card .verdicts'), /^Is the call real\?1Real/)
   await page.keyboard.press('j')
+  await page.keyboard.press('1')
+  await page.keyboard.press('1')
+  assert.equal(await page.$eval('.card', el => el.dataset.verdict), 'real')
+  await page.keyboard.press('0')
+  assert.equal(await page.$eval('.card', el => el.dataset.verdict), '')
+  assert.ok(await page.$eval('.card .unanswer', el => el.disabled))
+  await page.click('.card [data-v="artifact"]')
+  await page.click('.card .unanswer')
+  assert.equal(await page.$eval('.card', el => el.dataset.verdict), '')
   await page.keyboard.press('1')
   await page.keyboard.press('n')
   await page.keyboard.type('clean fan')

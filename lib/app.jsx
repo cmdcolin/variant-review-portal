@@ -4,6 +4,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
+  CLEAR_KEY,
   FACET_PREFIX,
   FILTER_DEFAULTS,
   fromHash,
@@ -19,6 +20,7 @@ import {
   tallyVerdicts,
   toHash,
   toTsv,
+  QUESTION,
   VERDICTS,
 } from './review.mjs'
 
@@ -177,6 +179,7 @@ function Shot({ img, alt, url, zoomed, onZoom }) {
 const Card = React.memo(function Card({
   card,
   label,
+  question,
   choices,
   describe,
   verdict,
@@ -302,7 +305,10 @@ const Card = React.memo(function Card({
         </details>
       ) : null}
       <div className="card-foot">
-        <div className="verdicts">
+        <div className="verdicts" role="group" aria-labelledby={`q-${card.id}`}>
+          <span className="question" id={`q-${card.id}`}>
+            {question}
+          </span>
           {choices.map(b => (
             <button
               key={b.v}
@@ -316,9 +322,23 @@ const Card = React.memo(function Card({
                 onVerdict(card.id, b.v)
               }}
             >
+              <kbd>{b.key}</kbd>
               {b.label}
             </button>
           ))}
+          <button
+            type="button"
+            className="unanswer"
+            disabled={!verdict}
+            title="Take the answer back, leaving the card unreviewed"
+            onClick={() => {
+              onPick(card.id)
+              onVerdict(card.id, '')
+            }}
+          >
+            <kbd>{CLEAR_KEY}</kbd>
+            Clear
+          </button>
         </div>
         <input
           className="note"
@@ -619,6 +639,7 @@ function Table({
 
 export function App({ data }) {
   const choices = data.verdicts ?? VERDICTS
+  const question = data.question ?? QUESTION
   // Verdicts, notes and the filters in the address start empty on both sides of
   // hydration and arrive on mount: the server has no way to know them, and
   // rendering a guess is a mismatch.
@@ -648,7 +669,14 @@ export function App({ data }) {
       const saved = JSON.parse(
         localStorage.getItem(storageKey(data.portalId)) ?? '{}',
       )
-      setVerdicts(saved.verdicts ?? {})
+      const offered = new Set(choices.map(b => b.v))
+      setVerdicts(
+        Object.fromEntries(
+          Object.entries(saved.verdicts ?? {}).filter(([, v]) =>
+            offered.has(v),
+          ),
+        ),
+      )
       setNotes(saved.notes ?? {})
       setExported(saved.exported ?? { verdicts: {}, notes: {} })
       setKeysOpen(!!saved.keys)
@@ -671,7 +699,7 @@ export function App({ data }) {
       setCursor(card)
     }
     setReady(true)
-  }, [data.portalId])
+  }, [data.portalId, choices])
 
   useEffect(() => {
     if (!ready) {
@@ -776,10 +804,10 @@ export function App({ data }) {
   const setVerdict = useCallback(
     (id, val) => {
       const next = { ...verdicts }
-      if (next[id] === val) {
-        delete next[id]
-      } else {
+      if (val) {
         next[id] = val
+      } else {
+        delete next[id]
       }
 
       // Under a verdict filter the card just judged leaves the list. The cursor
@@ -916,9 +944,10 @@ export function App({ data }) {
         act()
         return
       }
-      const hit = choices.find(b => b.key === e.key)
+      const answer =
+        e.key === CLEAR_KEY ? '' : choices.find(b => b.key === e.key)?.v
       const id = here ?? visible[0]?.id
-      if (!hit || !id) {
+      if (answer === undefined || !id) {
         return
       }
       e.preventDefault()
@@ -926,7 +955,7 @@ export function App({ data }) {
         wantScroll.current = true
         setCursor(id)
       }
-      setVerdict(id, hit.v)
+      setVerdict(id, answer)
     }
     document.addEventListener('keydown', onKey)
     return () => {
@@ -1350,6 +1379,7 @@ export function App({ data }) {
                 <kbd>{b.key}</kbd> {b.label.toLowerCase()}{' '}
               </React.Fragment>
             ))}
+            <kbd>{CLEAR_KEY}</kbd> clear
           </span>
           <span>
             <kbd>n</kbd> note
@@ -1415,6 +1445,7 @@ export function App({ data }) {
                 key={c.id}
                 card={c}
                 label={data.classes[c.cls]}
+                question={question}
                 choices={choices}
                 describe={data.describe}
                 verdict={verdicts[c.id] ?? ''}

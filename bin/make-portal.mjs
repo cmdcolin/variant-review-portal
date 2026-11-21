@@ -19,11 +19,12 @@ import {
 } from '../lib/cards.mjs'
 import { readVcfText } from '../lib/files.mjs'
 import { renderPage } from '../lib/page.mjs'
-import { VERDICTS } from '../lib/review.mjs'
+import { QUESTION, readQuestion, VERDICTS } from '../lib/review.mjs'
 import {
   parseTransmission,
   readTrio,
   TRIO_CLASSES,
+  TRIO_QUESTION,
   TRIO_SUPPORT,
   trioVerdicts,
 } from '../lib/trio.mjs'
@@ -64,6 +65,18 @@ Options:
               two-sample Sniffles VCF. A key alone reads the first sample
               column. jb2export groups on the reads jb2export counted instead,
               for a VCF that counts none
+  --question  <json>: the question each card asks and the answers a reviewer
+              picks from, in place of "Is the call real?" with Real, Needs a
+              look and Artifact:
+                { "question": "Does the sample's evidence support the call?",
+                  "answers": [
+                    { "label": "Supports", "key": "s", "tone": "real" },
+                    { "label": "Does not support", "key": "d",
+                      "tone": "artifact" },
+                    { "label": "De novo", "key": "v", "tone": "accent" } ] }
+              An answer's "value", what the export writes, is its label unless
+              given; its "key" is its place, 1 up, unless given; "tone" is
+              real, unsure, artifact or accent; "title" is its tooltip
   --facet     an INFO key to print on every card and filter the queue on, such
               as CLNSIG or SUBCLONAL; repeat or separate with commas. FILTER is
               one already when the callset has more than one
@@ -100,6 +113,7 @@ const { values } = parseArgs({
     out: { type: 'string' },
     title: { type: 'string' },
     facet: { type: 'string', multiple: true },
+    question: { type: 'string' },
     support: { type: 'string' },
     pedigree: { type: 'string' },
     child: { type: 'string' },
@@ -222,6 +236,16 @@ if (!trio && !values.support) {
     ].join('\n'),
   )
 }
+let asked
+try {
+  asked = values.question
+    ? readQuestion(fs.readFileSync(values.question, 'utf8'))
+    : trio
+      ? { question: TRIO_QUESTION, choices: trioVerdicts(trio.members) }
+      : { question: QUESTION, choices: VERDICTS }
+} catch (error) {
+  fail(`--question ${values.question}: ${error.message}`)
+}
 const fromImages = !trio && values.support === 'jb2export'
 let cards
 try {
@@ -322,7 +346,8 @@ const data = {
     : fromImages
       ? 'the reads jb2export counted'
       : `the caller's ${values.support.replaceAll(',', ', ')}`,
-  verdicts: trio ? trioVerdicts(trio.members) : VERDICTS,
+  question: asked.question,
+  verdicts: asked.choices,
   trio: trio ? { members: trio.members } : undefined,
   facets: facetOptions(cards),
   describe: describeKeys(vcfText, cards),

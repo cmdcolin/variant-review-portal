@@ -531,7 +531,23 @@
       }
       .verdicts {
         display: flex;
+        flex-wrap: wrap;
         gap: 6px;
+        align-items: center;
+      }
+      .verdicts .question {
+        font-size: 13px;
+        font-weight: 600;
+        margin-right: 4px;
+      }
+      .verdicts kbd {
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        opacity: 0.6;
+        margin-right: 5px;
+      }
+      .verdicts .unanswer {
+        margin-left: 6px;
       }
       .verdicts button[data-tone='real'] {
         --cls: var(--real);
