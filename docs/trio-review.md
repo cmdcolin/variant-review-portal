@@ -92,7 +92,9 @@ takes about 10 s a site for the three CRAMs.
 
 Both commands run `lib/classifyTrio.mjs`, which reads the ploidy from each
 genotype and ignores phase. It splits a flagged site into a **de novo
-candidate**, with an allele in neither parent, or a **Mendelian violation**.
+candidate**, with an allele no parent is called with, or a **Mendelian
+violation**. Both are about the calls: most flagged sites are a caller's error,
+and the reviewer settles each one from the reads.
 
 - A duo whose known parent cannot settle a site is no call.
 - `either`, polyploid and aneuploid splits never report a violation.
@@ -116,9 +118,13 @@ first, then Mendelian violations, each in position order.
 - **The trio's calls**: each member's sample, relationship, `GT` and whatever
   else its `FORMAT` holds (`DP`, `AD`, `GQ`), beside the reads `jb2export`
   counted with the record's ALT out of the reads covering it.
-- **The class and why**: the allele in neither parent for a de novo candidate
-  (`G is in neither parent`), or the parent the child shares no allele with for
-  a Mendelian violation (`nothing from the father's T/T`).
+- **The class and why**, in terms of the calls: the allele no parent is called
+  with for a de novo candidate (`Neither parent is called with G`), or the
+  parent whose call the child's shares no allele with for a Mendelian violation
+  (`The daughter's call C/C takes nothing from the father's T/T`). A de novo
+  candidate's sentence goes on with what `jb2export` counted against the calls:
+  a parent whose reads carry the allele (`19 of the father's 36 reads have it`),
+  or a child whose reads all lack it.
 - **The answers that fit a trio**, keyed in order: real de novo, missed in the
   father, missed in the mother, child miscall, copy-number change (a deletion or
   uniparental disomy, where the calls are right for a one-copy sample), unclear.
@@ -128,9 +134,9 @@ first, then Mendelian violations, each in position order.
 
 ## Read support
 
-The support filter splits the de novo candidates by the reads with the allele
-that is in neither parent. The portal counts that allele at a substitution where
-it is the ALT, or the REF at a site with one ALT (as the reads without the ALT):
+The support filter splits the de novo candidates by the reads with the allele no
+parent is called with. The portal counts that allele at a substitution where it
+is the ALT, or the REF at a site with one ALT (as the reads without the ALT):
 
 - **no read in the child has the allele**: most likely a child miscall
 - **a parent's reads have the allele too**: a parental allele the calls missed,

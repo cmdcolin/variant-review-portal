@@ -6,6 +6,7 @@ import { fromTsv, tallyVerdicts, toTsv } from '../lib/review.mjs'
 import { classifyTrio } from '../lib/classifyTrio.mjs'
 import {
   novelCount,
+  readsSay,
   parsePedigree,
   parseRegion,
   parseTransmission,
@@ -224,21 +225,62 @@ const why = (gts, extra = {}) =>
     ...extra,
   })
 
-test('a de novo candidate names the allele in neither parent, the REF included', () => {
+test('a de novo candidate names the allele no parent is called with, the REF included', () => {
   assert.deepEqual(why(['0|1', '0|0', '0|0']), {
     novel: ['1'],
-    why: 'G is in neither parent',
+    why: 'Neither parent is called with G',
   })
   assert.deepEqual(why(['1|0', '1|1', '1|1']), {
     novel: ['0'],
-    why: 'A is in neither parent',
+    why: 'Neither parent is called with A',
   })
+  assert.equal(
+    whyOf('deNovoCandidate', {
+      members: trioMembers({ child: 'HG02024', mother: 'HG02025' }),
+      genotypes: { HG02024: '0/1', HG02025: '0/0' },
+      ref: 'A',
+      alts: ['G'],
+      rule: [],
+    }).why,
+    'The mother is not called with G',
+  )
 })
 
-test('a Mendelian violation names the parent the child shares no allele with', () => {
+const counted = (relationship, reads, depth) => ({
+  relationship,
+  count: { bases: 'G', reads, depth, novel: true },
+})
+
+test('the reads a de novo card names: a parent carrying the allele, a child lacking it', () => {
+  assert.deepEqual(
+    readsSay([
+      counted('daughter', 0, 34),
+      counted('father', 19, 36),
+      counted('mother', 1, 30),
+    ]),
+    [
+      "19 of the father's 36 reads have it",
+      "1 of the mother's 30 reads has it",
+      "the daughter's 34 reads lack it",
+    ],
+  )
+  assert.deepEqual(
+    readsSay([counted('daughter', 18, 34), counted('father', 0, 36)]),
+    [],
+  )
+  assert.deepEqual(
+    readsSay([
+      { relationship: 'daughter', count: { reads: 0, depth: 9, novel: false } },
+      { relationship: 'father', count: { reads: 4, depth: 9, novel: false } },
+    ]),
+    [],
+  )
+})
+
+test('a Mendelian violation names the parent whose call the child’s shares no allele with', () => {
   assert.equal(
     why(['0|0', '1|1', '1|0'], { cls: 'mendelianViolation' }).why,
-    "nothing from the father's G|G",
+    "The daughter's call A|A takes nothing from the father's G|G",
   )
 })
 
@@ -253,7 +295,7 @@ test('a transmission entry narrows the violation to the parent it names', () => 
       sex: 'male',
       rule: [{ refName: 'X', sex: 'male', from: 'mother' }],
     }).why,
-    "nothing from the mother's G/G",
+    "The son's call A takes nothing from the mother's G/G",
   )
 })
 
@@ -266,11 +308,11 @@ test('a violation every parent shares an allele with is a split no pair of gamet
   )
   assert.equal(
     why(gts, { cls: 'mendelianViolation' }).why,
-    'no gamete from each parent makes A/G/G/G',
+    "No gamete of each parent's call makes the daughter's A/G/G/G",
   )
 })
 
-test('the allele in neither parent is counted as the ALT, or as the reads without it', () => {
+test('the allele no parent is called with is counted as the ALT, or as the reads without it', () => {
   const lane = { label: 'k', alt: 9, depth: 20 }
   assert.deepEqual(novelCount(lane, ['1'], 'A', ['G']), {
     bases: 'G',
@@ -351,7 +393,10 @@ test('trio cards take the check’s class, de novo candidates first', () => {
 
 test('a trio card lists each member’s call, fields and the novel allele’s reads', () => {
   const [site] = trioCards()
-  assert.equal(site.trio.why, 'G is in neither parent')
+  assert.equal(
+    site.trio.why,
+    "Neither parent is called with G; 6 of the mother's 20 reads have it",
+  )
   assert.deepEqual(
     site.trio.members.map(m => [m.sample, m.relationship, m.gt, m.fields]),
     [

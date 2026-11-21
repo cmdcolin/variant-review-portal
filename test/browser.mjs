@@ -244,7 +244,10 @@ try {
     await page.$$eval('.card', els => els.map(el => el.dataset.cls)),
     ['deNovoCandidate', 'mendelianViolation'],
   )
-  assert.match(await text('.card .trio'), /G is in neither parent/)
+  assert.match(
+    await text('.card .trio'),
+    /Neither parent is called with G; 6 of the mother's 20 reads have it/,
+  )
   assert.match(
     await text('.card .trio tbody'),
     /kid \(daughter\)0\|1G 9\/20dad \(father\)0\|0G 0\/18mom \(mother\)0\|0G 6\/20/,

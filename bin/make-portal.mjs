@@ -85,8 +85,8 @@ Options:
   --pedigree      the pedigree that names the trio: a PLINK .fam or .ped, or
                   a table whose header names SampleID or IID. --images then
                   names each alignments track by its VCF sample, the child's
-                  first, and the queue groups on the reads of the allele in
-                  neither parent, so --support is left out
+                  first, and the queue groups on the reads of the allele no
+                  parent is called with, so --support is left out
   --child         the child whose trio to review, where the VCF holds several
   --transmission  a JSON list of { refName, sex, from } entries for sex
                   chromosomes and organelles, as the assembly's transmission
@@ -195,7 +195,7 @@ const vcfText = readVcfText(vcf)
 function trioOptions() {
   if (values.support) {
     throw new Error(
-      '--support does not apply with --pedigree: a trio queue groups on the reads jb2export counted of the allele in neither parent',
+      '--support does not apply with --pedigree: a trio queue groups on the reads jb2export counted of the allele no parent is called with',
     )
   }
   const { trio, members } = readTrio({
@@ -342,7 +342,7 @@ const data = {
   classes: trio ? TRIO_CLASSES : CLASSES,
   support: trio ? TRIO_SUPPORT : SUPPORT,
   supportFrom: trio
-    ? 'the reads jb2export counted of the allele in neither parent'
+    ? 'the reads jb2export counted of the allele no parent is called with'
     : fromImages
       ? 'the reads jb2export counted'
       : `the caller's ${values.support.replaceAll(',', ', ')}`,
