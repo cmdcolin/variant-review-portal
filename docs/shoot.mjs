@@ -97,9 +97,9 @@ try {
       await page.addStyleTag({ content: 'header { position: static }' })
       const card = await page.waitForSelector('.card[data-current="true"]')
       await page.waitForFunction(() =>
-        [...document.querySelectorAll('.card[data-current="true"] img')].every(
-          img => img.complete && img.naturalWidth,
-        ),
+        [...document.querySelectorAll('.card[data-current="true"] img')]
+          .filter(img => !img.closest('details:not([open])'))
+          .every(img => img.complete && img.naturalWidth),
       )
       // past the cursor's bar on the left, and as much room on the right as
       // the card's own padding leaves on the left
