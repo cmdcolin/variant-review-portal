@@ -1,14 +1,14 @@
 # What a card holds
 
-- **One image, every track.** `jb2export` draws a chromosome a row. Loci on one
-  chromosome are a linear view: one window, or the two ends of a deletion,
-  duplication or inversion side by side under the arc of the reads joining them.
-  A junction between two chromosomes is a breakpoint split view, one panel a
-  chromosome, and an event's loci on one chromosome share its row. Each has the
-  sample's reads above its control's, split reads and reads carrying a large
-  deletion on top. Any other track of the run is in the image too: genes, the
-  callset itself, repeats. The image scales to the window so a whole card is on
-  screen at once; click it, or press <kbd>f</kbd>, for full size.
+- **One image, every track.** `jb2export` draws a record as one linear view: one
+  window, or the ends of a deletion, duplication, inversion or translocation
+  side by side under the arc of the reads joining them, and every locus of an
+  event in the same row. The sample's reads are above its control's, split reads
+  and reads with a large deletion on top. A `jb2export` of 5.0.0-beta.22 or
+  older stacks the chromosomes of a translocation or an event as the panels of a
+  breakpoint split view. Any other track of the run is in the image too: genes,
+  the callset itself, repeats. The image scales to the window so a whole card is
+  on screen at once; click it, or press <kbd>f</kbd>, for full size.
 - **The caller's read counts.** The queue is grouped on the supporting reads the
   VCF itself records, so `--support` is required: the FORMAT keys the caller
   counts them under, the sample's first and its controls' after.
