@@ -8,8 +8,8 @@ answers as TSV.
 
 | Scenario                                             | Hosted portal                                                                                                                  | Guide                                   |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
-| Somatic structural variants, tumor vs normal         | [COLO829](https://jbrowse.org/demos/colo829_review/) on ONT, [HG008-T](https://jbrowse.org/demos/hg008_review/) on PacBio HiFi | [What a card holds](docs/cards.md)      |
-| Somatic small variants, tumor vs normal              | [COLO829 coding variants](https://jbrowse.org/demos/colo829_snv_review/) on ONT                                                | [What a card holds](docs/cards.md)      |
+| Somatic structural variants, tumor vs normal         | [COLO829](https://jbrowse.org/demos/colo829_review/) on ONT, [HG008-T](https://jbrowse.org/demos/hg008_review/) on PacBio HiFi | [Card contents](docs/cards.md)          |
+| Somatic small variants, tumor vs normal              | [COLO829 coding variants](https://jbrowse.org/demos/colo829_snv_review/) on ONT                                                | [Card contents](docs/cards.md)          |
 | A trio's de novo candidates and Mendelian violations | [1000 Genomes KHV trio](https://jbrowse.org/demos/khv_trio_review/), chr1:190-200 Mb on 30x Illumina                           | [Reviewing a trio](docs/trio-review.md) |
 
 ## Install
@@ -51,7 +51,7 @@ Click a picture to open its card in the hosted portal.
 
 - [Rendering and building](docs/rendering.md): the `jb2export` runs, the
   zoomed-out panel, copy number, links into JBrowse
-- [What a card holds](docs/cards.md): each kind of SV, read counts, genes,
+- [Card contents](docs/cards.md): each kind of SV, read counts, genes,
   facets, events
 - [Reviewing](docs/reviewing.md): keys, the table, runs of cards, your own
   question, export and import

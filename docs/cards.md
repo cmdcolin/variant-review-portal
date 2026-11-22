@@ -1,4 +1,4 @@
-# What a card holds
+# Card contents
 
 ## The image
 
@@ -44,7 +44,7 @@ chromosomes as the panels of a breakpoint split view instead.
     position.
   - `--support jb2export` groups on these counts, for a VCF that has none.
 
-## What the caller wrote
+## Fields from the VCF
 
 - **The record**: `SVTYPE`, size, `FILTER`, `QUAL` and the sample columns, and
   under **VCF record** every `INFO` key. Hover a key for the header's

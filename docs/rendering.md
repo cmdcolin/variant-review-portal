@@ -109,7 +109,7 @@ drawn in, from the manifest's `spec` column. A track made from a file flag such
 as `--bam` is in no hosted config, so the link leaves it out.
 [Carrying the reads](carrying-the-reads.md) puts the reads in the portal itself.
 
-## What comes out
+## Output files
 
 ```
 portal/
