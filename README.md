@@ -74,6 +74,11 @@ Click a picture to open its card in the hosted portal.
   [complex rearrangements](https://jbrowse.org/jb2/docs/tutorials/cancer_sv/)
   tutorials
 
+variant-review-portal is an example app: its cards, keys and questions fit
+the reviews it was built for. A review that needs others may be within reach
+of a coding agent working from this code, which can write the bespoke cards,
+questions or classifier your callset calls for.
+
 ## License
 
 Apache-2.0.
