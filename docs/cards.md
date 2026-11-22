@@ -3,10 +3,10 @@
 ## The image
 
 `jb2export` draws a record as one linear view, with the sample's reads above its
-control's and any other track of the run (genes, the callset, repeats) beside
-them. A small variant is one window, its pileups sorted at the variant's base.
-The ends of an SV, and every locus of an event, are windows side by side in one
-row under an arc of the reads joining them.
+control's and any other track of the run (genes, ClinVar, the callset, repeats)
+beside them. A small variant is one window, its pileups sorted at the variant's
+base. The ends of an SV, and every locus of an event, are windows side by side
+in one row under an arc of the reads joining them.
 
 | SV class           | The card shows                                                                          |
 | ------------------ | --------------------------------------------------------------------------------------- |
