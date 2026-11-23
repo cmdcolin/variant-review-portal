@@ -6,8 +6,9 @@ and `variant-review-portal` turns those images and the VCF into a page.
 ```bash
 # every track in one run, so each record is one image; a read drawn with its
 # mate and split segments in one row, and only the pairs that do not fit the
-# reference as arcs
-READS=(unit=chain readConnections.ordinaryPairs.show=false height:150)
+# reference as arcs, keyed by color
+READS=(unit=chain readConnections.ordinaryPairs.show=false legend.show=true
+  height:150)
 jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \
   --track genes height:50 --track calls height:50 \
   --track tumor_reads "${READS[@]}" --track normal_reads "${READS[@]}" \
@@ -35,6 +36,10 @@ need one newer than 5.0.0-beta.13, and a live link one whose manifest has the
   pairs then stack as rows spanning it, not as halves on separate rows.
 - **`readConnections.ordinaryPairs.show=false`** leaves out the arcs of pairs
   that fit the reference, which in a short-read pileup cover the band in grey.
+- **`legend.show=true`** keys the colors of the reads and their arcs beside the
+  track, such as the brown of an arc joining two chromosomes. A `jb2export` of
+  5.0.0-beta.22 or older also keys the read colors in a run with
+  `pileup.show=false`, where no read is drawn.
 
 ## Zoomed out
 
@@ -48,7 +53,8 @@ not counted, so it takes no names.
 # that do not fit the reference as arcs
 WIDE=(pileup.show=false coverage.alleles.show=false
   coverage.interbase.show=false maxScore=80
-  readConnections.show=true readConnections.ordinaryPairs.show=false height:130)
+  readConnections.show=true readConnections.ordinaryPairs.show=false
+  legend.show=true height:130)
 jb2export batch --sites calls.vcf.gz --config config.json --assembly hg38 \
   --track genes height:60 --track tumor_reads "${WIDE[@]}" \
   --track normal_reads "${WIDE[@]}" --flank 100000 --outDir wide --manifest
