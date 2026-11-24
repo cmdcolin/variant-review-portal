@@ -220,6 +220,7 @@ const Card = React.memo(function Card({
   onEvent,
   bind,
   contextOpen,
+  recordOpen,
 }) {
   const [zoomed, setZoomed] = useState(false)
   return (
@@ -330,7 +331,11 @@ const Card = React.memo(function Card({
           </details>
         ))}
       {card.info.length ? (
-        <details className="record">
+        <details
+          className="record"
+          key={`record:${recordOpen}`}
+          open={recordOpen}
+        >
           <summary>VCF record</summary>
           <Fields rows={card.info} descriptions={describe.INFO} />
         </details>
@@ -682,7 +687,10 @@ export function App({ data }) {
   const [keysOpen, setKeysOpen] = useState(false)
   const [fit, setFit] = useState(true)
   const [contextOpen, setContextOpen] = useState(false)
+  const [recordOpen, setRecordOpen] = useState(false)
+  const [overviewOpen, setOverviewOpen] = useState(false)
   const hasContext = data.cards.some(c => c.context.length)
+  const hasRecord = data.cards.some(c => c.info.length)
   const [filter, setFilter] = useState(FILTER_DEFAULTS)
   const [sort, setSort] = useState('callset')
   const [view, setView] = useState('cards')
@@ -715,6 +723,8 @@ export function App({ data }) {
       setKeysOpen(!!saved.keys)
       setFit(saved.fit ?? true)
       setContextOpen(!!saved.context)
+      setRecordOpen(!!saved.record)
+      setOverviewOpen(!!saved.overview)
     } catch {
       /* private window, or site data blocked */
     }
@@ -748,6 +758,8 @@ export function App({ data }) {
           keys: keysOpen,
           fit,
           context: contextOpen,
+          record: recordOpen,
+          overview: overviewOpen,
         }),
       )
     } catch {
@@ -762,6 +774,8 @@ export function App({ data }) {
     keysOpen,
     fit,
     contextOpen,
+    recordOpen,
+    overviewOpen,
   ])
 
   useEffect(() => {
@@ -1235,6 +1249,35 @@ export function App({ data }) {
               }}
             />
           ) : null}
+          {hasRecord ? (
+            <Segmented
+              label="VCF record"
+              name="record"
+              value={recordOpen ? 'show' : 'hide'}
+              options={[
+                ['hide', 'Hide', 'Fold the VCF record on every card'],
+                ['show', 'Show', 'Open the VCF record on every card'],
+              ]}
+              onChange={v => {
+                wantScroll.current = true
+                setRecordOpen(v === 'show')
+              }}
+            />
+          ) : null}
+          {data.overview ? (
+            <Segmented
+              label="Genome overview"
+              name="overview"
+              value={overviewOpen ? 'show' : 'hide'}
+              options={[
+                ['hide', 'Hide', 'Fold the genome overview'],
+                ['show', 'Show', 'Open the genome overview'],
+              ]}
+              onChange={v => {
+                setOverviewOpen(v === 'show')
+              }}
+            />
+          ) : null}
           <button
             id="keysbtn"
             type="button"
@@ -1505,7 +1548,11 @@ export function App({ data }) {
 
       <main data-fit={fit} data-view={view}>
         {data.overview ? (
-          <details className="overview">
+          <details
+            className="overview"
+            key={`overview:${overviewOpen}`}
+            open={overviewOpen}
+          >
             <summary>Genome overview</summary>
             <img
               loading="lazy"
@@ -1555,6 +1602,7 @@ export function App({ data }) {
                 onEvent={showEvent}
                 bind={bind}
                 contextOpen={contextOpen}
+                recordOpen={recordOpen}
               />
             ))}
           </div>
