@@ -685,7 +685,27 @@
       }
       .segmented {
         display: flex;
-        gap: 6px;
+        align-items: center;
+      }
+      .seg-label {
+        font-size: 12px;
+        color: GrayText;
+        margin-right: 6px;
+      }
+      .segmented button {
+        position: relative;
+        border-radius: 0;
+        margin-left: -1px;
+      }
+      .segmented button:first-of-type {
+        margin-left: 0;
+        border-radius: 4px 0 0 4px;
+      }
+      .segmented button:last-of-type {
+        border-radius: 0 4px 4px 0;
+      }
+      .segmented button[aria-pressed='true'] {
+        z-index: 1;
       }
       #export[data-pending='true'] {
         color: var(--unsure);

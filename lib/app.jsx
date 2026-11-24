@@ -157,6 +157,28 @@ function TrioCalls({ card, describe }) {
   )
 }
 
+function Segmented({ label, name, value, options, onChange }) {
+  return (
+    <div className="segmented" role="group" aria-label={label} data-name={name}>
+      <span className="seg-label">{label}</span>
+      {options.map(([v, text, title]) => (
+        <button
+          key={v}
+          type="button"
+          data-value={v}
+          title={title}
+          aria-pressed={value === v}
+          onClick={() => {
+            onChange(v)
+          }}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function Shot({ img, alt, url, zoomed, onZoom }) {
   return img.src ? (
     <img
@@ -1173,49 +1195,45 @@ export function App({ data }) {
           </div>
         </div>
         <div className="actions">
-          <div className="segmented" role="group" aria-label="Layout">
-            {[
-              ['cards', 'Cards'],
-              ['table', 'Table'],
-            ].map(([v, label]) => (
-              <button
-                key={v}
-                type="button"
-                data-view={v}
-                aria-pressed={view === v}
-                onClick={() => {
-                  wantScroll.current = true
-                  setView(v)
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <button
-            id="fit"
-            type="button"
-            aria-pressed={fit}
-            title="Scale each image to fit the window"
-            onClick={() => {
-              setFit(!fit)
+          <Segmented
+            label="Layout"
+            name="view"
+            value={view}
+            options={[
+              ['cards', 'Cards', 'One card per record, with its images'],
+              ['table', 'Table', 'One row per record'],
+            ]}
+            onChange={v => {
+              wantScroll.current = true
+              setView(v)
             }}
-          >
-            Fit
-          </button>
+          />
+          <Segmented
+            label="Image size"
+            name="size"
+            value={fit ? 'fit' : 'large'}
+            options={[
+              ['fit', 'Fit', 'Scale each image to fit the window'],
+              ['large', 'Large', 'Show each image at full size'],
+            ]}
+            onChange={v => {
+              setFit(v === 'fit')
+            }}
+          />
           {hasContext ? (
-            <button
-              id="context"
-              type="button"
-              aria-pressed={contextOpen}
-              title="Open the zoomed-out view on every card"
-              onClick={() => {
+            <Segmented
+              label="Zoomed out"
+              name="context"
+              value={contextOpen ? 'show' : 'hide'}
+              options={[
+                ['hide', 'Hide', 'Fold the zoomed-out view on every card'],
+                ['show', 'Show', 'Open the zoomed-out view on every card'],
+              ]}
+              onChange={v => {
                 wantScroll.current = true
-                setContextOpen(!contextOpen)
+                setContextOpen(v === 'show')
               }}
-            >
-              Zoomed out
-            </button>
+            />
           ) : null}
           <button
             id="keysbtn"
