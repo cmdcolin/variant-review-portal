@@ -6,11 +6,17 @@ image, its VCF fields, a question to answer, and a link that opens the loci live
 in JBrowse. A reviewer works through the queue by keyboard and exports the
 answers as TSV.
 
-| Scenario                                             | Hosted portal                                                                                                                  | Guide                                   |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
-| Somatic structural variants, tumor vs normal         | [COLO829](https://jbrowse.org/demos/colo829_review/) on ONT, [HG008-T](https://jbrowse.org/demos/hg008_review/) on PacBio HiFi | [Card contents](docs/cards.md)          |
-| Somatic small variants, tumor vs normal              | [COLO829 coding variants](https://jbrowse.org/demos/colo829_snv_review/) on ONT                                                | [Card contents](docs/cards.md)          |
-| A trio's de novo candidates and Mendelian violations | [1000 Genomes KHV trio](https://jbrowse.org/demos/khv_trio_review/), chr1:190-200 Mb on 30x Illumina                           | [Reviewing a trio](docs/trio-review.md) |
+Click a picture to open its card in the hosted portal.
+
+<table>
+<tr><td width="50%"><a href="https://jbrowse.org/demos/colo829_review/#card=366"><img src="docs/gallery/deletion-pten.png" alt="A 12 kb deletion card through PTEN, annotated exon loss with HIGH impact: the tumor's coverage drops between the breakpoints, with 7 split and 33 gapped reads of 34, the normal none, and the verdict set to Real" width="100%"></a><br>A 12 kb deletion through PTEN</td><td width="50%"><a href="https://jbrowse.org/demos/colo829_review/#card=343"><img src="docs/gallery/translocation.png" alt="A breakend card joining chr7, in ASIC3, to chr15: the two ends drawn one above the other, 32 tumor split reads running between them and none in the normal, and the verdict set to Real" width="100%"></a><br>A chr7 to chr15 translocation</td></tr>
+<tr><td width="50%"><a href="https://jbrowse.org/demos/colo829_snv_review/#card=219"><img src="docs/gallery/braf.png" alt="The BRAF V600E card, written p.Val640Glu on the MANE transcript, with its ClinVar significance: the BRAF exon and ClinVar's entries, the pathogenic ones in red, stacked at codon 600 above the ALT base in 64 of 88 tumor reads and absent from the normal's 68" width="100%"></a><br>BRAF V600E under its ClinVar entries</td><td width="50%"><a href="https://jbrowse.org/demos/khv_trio_review/#card=66"><img src="docs/gallery/trio-de-novo.png" alt="A de novo candidate card at chr1:193,838,143: the daughter called 1|0 with C in 15 of her 39 reads, both parents 0|0 with C in none of their 28 and 33, and the verdict set to Real de novo" width="100%"></a><br>A de novo candidate in a trio</td></tr>
+</table>
+
+Live portals: [COLO829 structural variants](https://jbrowse.org/demos/colo829_review/)
+on ONT, [HG008-T](https://jbrowse.org/demos/hg008_review/) on PacBio HiFi,
+[COLO829 coding variants](https://jbrowse.org/demos/colo829_snv_review/), and a
+[1000 Genomes KHV trio](https://jbrowse.org/demos/khv_trio_review/).
 
 ## Install
 
@@ -40,12 +46,6 @@ the FORMAT keys the caller counts supporting reads under, in the same order, and
 the portal groups the queue by them. The same commands build a portal from a VCF
 of SNVs and indels.
 
-Click a picture to open its card in the hosted portal.
-
-<table>
-<tr><td width="50%"><a href="https://jbrowse.org/demos/colo829_review/#card=366"><img src="docs/gallery/deletion-pten.png" alt="A 12 kb deletion card through PTEN, annotated exon loss with HIGH impact: the tumor's coverage drops between the breakpoints, with 7 split and 33 gapped reads of 34, the normal none, and the verdict set to Real" width="100%"></a><br>A 12 kb deletion through PTEN</td><td width="50%"><a href="https://jbrowse.org/demos/colo829_review/#card=343"><img src="docs/gallery/translocation.png" alt="A breakend card joining chr7, in ASIC3, to chr15: the two ends drawn one above the other, 32 tumor split reads running between them and none in the normal, and the verdict set to Real" width="100%"></a><br>A chr7 to chr15 translocation</td></tr>
-<tr><td width="50%"><a href="https://jbrowse.org/demos/colo829_snv_review/#card=219"><img src="docs/gallery/braf.png" alt="The BRAF V600E card, written p.Val640Glu on the MANE transcript, with its ClinVar significance: the BRAF exon and ClinVar's entries, the pathogenic ones in red, stacked at codon 600 above the ALT base in 64 of 88 tumor reads and absent from the normal's 68" width="100%"></a><br>BRAF V600E under its ClinVar entries</td><td width="50%"><a href="https://jbrowse.org/demos/khv_trio_review/#card=66"><img src="docs/gallery/trio-de-novo.png" alt="A de novo candidate card at chr1:193,838,143: the daughter called 1|0 with C in 15 of her 39 reads, both parents 0|0 with C in none of their 28 and 33, and the verdict set to Real de novo" width="100%"></a><br>A de novo candidate in a trio</td></tr>
-</table>
 
 ## Documentation
 

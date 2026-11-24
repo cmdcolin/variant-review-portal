@@ -1,6 +1,7 @@
 // Rebuild the README's gallery, in light mode, from built portals: each a
 // directory or a hosted URL, named for the callset it holds.
 //   node docs/shoot.mjs sv=<portal> snv=<portal> hg008=<portal> trio=<portal>
+//   node docs/shoot.mjs sv=<portal> trio=<portal> only=table,trio-table
 //   node docs/shoot.mjs sv=https://jbrowse.org/demos/colo829_review/ \
 //     snv=https://jbrowse.org/demos/colo829_snv_review/ \
 //     hg008=https://jbrowse.org/demos/hg008_review/ \
@@ -12,9 +13,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-const portals = Object.fromEntries(
+const { only, ...portals } = Object.fromEntries(
   process.argv.slice(2).map(arg => arg.split(/=(.*)/s, 2)),
 )
+const wanted = only?.split(',')
 if (!Object.keys(portals).length) {
   console.error(
     'usage: node docs/shoot.mjs sv=<portal> snv=<portal> hg008=<portal> trio=<portal>',
@@ -56,7 +58,9 @@ const SHOTS = [
     page: true,
     height: 800,
   },
-].filter(shot => portals[shot.portal])
+]
+  .filter(shot => portals[shot.portal])
+  .filter(shot => !wanted || wanted.includes(shot.name))
 
 const out = path.join(import.meta.dirname, 'gallery')
 fs.mkdirSync(out, { recursive: true })
